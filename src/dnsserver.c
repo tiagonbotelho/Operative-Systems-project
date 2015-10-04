@@ -66,7 +66,7 @@ struct QUERY
     struct QUESTION *ques;
 };
 
-int main( int argc , char *argv[]) 
+int main(int argc ,char *argv[]) 
 {
     unsigned char buf[65536], *reader;
     int sockfd, stop;
