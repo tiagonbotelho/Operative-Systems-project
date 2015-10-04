@@ -1,5 +1,4 @@
-#include "dnsserver.h"
-
+#include "main.h"
 int request_manager(int argc ,const char *argv[]) 
 {
   printf("Started request manager process\n");

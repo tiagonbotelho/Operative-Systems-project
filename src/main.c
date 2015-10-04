@@ -10,19 +10,21 @@ void statistics(){
 void start_statistics(){
   if(fork()==0){
     statistics();
+    exit(0);
   }
 }
 
 void config(){
   printf("Started config process\n");
-  while(1){
-  }
+  config_struct *config = get_configs("../data/config.txt");
+  printf("%d\n",config->n_threads);
 }
 
 
 void start_config(){
   if(fork()==0){
     config();
+    exit(0);
   }
 }
 

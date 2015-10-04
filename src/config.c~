@@ -1,0 +1,8 @@
+#include "main.h"
+
+void get_configs(char* path){
+  FILE* file = fopen(path,"r");
+  int test;
+  fscanf(file,"Threads = %d\n",&test);
+  printf("%d\n",test);
+}
