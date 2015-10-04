@@ -6,6 +6,9 @@
 #include<netinet/in.h>
 #include<unistd.h>
 
+#define TRUE 1
+#define FALSE 0
+
 //dns server
 void convertName2RFC (unsigned char*,unsigned char*);
 unsigned char* convertRFC2Name (unsigned char*,unsigned char*,int*);
