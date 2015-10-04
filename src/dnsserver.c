@@ -1,6 +1,6 @@
 #include "main.h"
 
-int main(int argc ,char *argv[]) 
+int request_manager(int argc ,char *argv[]) 
 {
     unsigned char buf[65536], *reader;
     int sockfd, stop;
