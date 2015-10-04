@@ -1,4 +1,4 @@
-#include "main.h"
+#include "dnsserver.h"
 
 int request_manager(int argc ,const char *argv[]) 
 {
