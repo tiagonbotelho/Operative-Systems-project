@@ -2,6 +2,7 @@
 
 int request_manager(int argc ,const char *argv[]) 
 {
+  printf("Started request manager process\n");
     unsigned char buf[65536], *reader;
     int sockfd, stop;
     struct DNS_HEADER *dns = NULL;

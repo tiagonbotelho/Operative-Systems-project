@@ -1,9 +1,9 @@
 #include "main.h"
 
 void statistics(){
+  printf("Started statistics process\n");
   while(1){
-    sleep(5);
-    printf("STATISTICS PROCESS\n");
+    
   }
 }
 
@@ -14,9 +14,8 @@ void start_statistics(){
 }
 
 void config(){
+  printf("Started config process\n");
   while(1){
-    sleep(5);
-    printf("CONFIG PROCESS\n");
   }
 }
 
@@ -29,7 +28,7 @@ void start_config(){
 
 int main(int argc, char const *argv[]){
   start_config();
-  config();
+  start_statistics();
   request_manager(argc,argv);
   return 0;
 }
