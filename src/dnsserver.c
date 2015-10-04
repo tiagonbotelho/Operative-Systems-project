@@ -97,6 +97,7 @@ int main( int argc , char *argv[])
     // Create UDP socket
     sockfd = socket(AF_INET , SOCK_DGRAM , IPPROTO_UDP); //UDP packet for DNS queries
 
+    // If failed to open socket
     if (sockfd < 0) {
         printf("ERROR opening socket.\n");
         exit(1);
@@ -111,6 +112,7 @@ int main( int argc , char *argv[])
     // Bind application to UDP port
     int res = bind(sockfd,(struct sockaddr *)&servaddr,sizeof(servaddr));
 
+    // Failure on association of application to UDP port
     if(res < 0) {
         printf("Error binding to port %d.\n", servaddr.sin_port);
 
