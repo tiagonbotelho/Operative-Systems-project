@@ -2,7 +2,8 @@
 
 void statistics(){
   while(1){
-    printf("STATISTICS PROCESS");
+    sleep(5);
+    printf("STATISTICS PROCESS\n");
   }
 }
 
@@ -14,7 +15,8 @@ void start_statistics(){
 
 void config(){
   while(1){
-    printf("CONFIG PROCESS");
+    sleep(5);
+    printf("CONFIG PROCESS\n");
   }
 }
 

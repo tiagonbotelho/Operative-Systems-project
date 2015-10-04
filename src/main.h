@@ -10,6 +10,8 @@
 void convertName2RFC (unsigned char*,unsigned char*);
 unsigned char* convertRFC2Name (unsigned char*,unsigned char*,int*);
 void sendReply(unsigned short, unsigned char*, int, int, struct sockaddr_in);
+int request_manager(int argc ,const char *argv[]);
+
 
 //DNS header structure
 struct DNS_HEADER
