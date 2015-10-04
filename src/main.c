@@ -32,6 +32,8 @@ int main(int argc, char const *argv[]){
   start_config();
   start_statistics();
   request_manager(argc,argv);
+
+  
   return 0;
 }
 
