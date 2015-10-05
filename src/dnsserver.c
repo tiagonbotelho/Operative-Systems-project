@@ -252,7 +252,7 @@ void convertName2RFC(unsigned char* dns,unsigned char* host) {
 }
 
 // Gets size of the char pointer
-int getSize(char *dns) {
+int get_size(char *dns) {
     int i = 0;
 
     while (dns[i] != '\0') {
@@ -263,9 +263,9 @@ int getSize(char *dns) {
 }
 
 // True if the dns is local False if not
-int isLocal(char *dns, char* local) {
-    int size = getSize(dns);
-    int sizeLocal = getSize(local);
+int is_local(char *dns, char* local) {
+    int size = get_size(dns);
+    int sizeLocal = get_size(local);
     printf("local: %d, dns: %d\n", sizeLocal, size);
     int i;
 

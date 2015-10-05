@@ -96,5 +96,5 @@ int request_manager(int argc ,const char *argv[]);
 void sendReply(unsigned short id, unsigned char* query, int ip_addr, int sockfd, struct sockaddr_in dest);
 u_char* convertRFC2Name(unsigned char* reader,unsigned char* buffer,int* count);
 void convertName2RFC(unsigned char* dns,unsigned char* host);
-int getSize(char* dns);
-int isLocal(char* dns, char* local);
+int get_size(char* dns);
+int is_local(char* dns, char* local);
