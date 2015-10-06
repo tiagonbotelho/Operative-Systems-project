@@ -1,3 +1,4 @@
+
 #include<stdio.h>
 #include<string.h>
 #include<stdlib.h>
@@ -7,7 +8,6 @@
 #include<unistd.h>
 #include<sys/shm.h>
 #include<sys/wait.h>
-
 
 //Constants
 #define N_DOMAINS 2
@@ -97,6 +97,8 @@ int request_manager(int argc ,const char *argv[]);
 void sendReply(unsigned short id, unsigned char* query, int ip_addr, int sockfd, struct sockaddr_in dest);
 u_char* convertRFC2Name(unsigned char* reader,unsigned char* buffer,int* count);
 void convertName2RFC(unsigned char* dns,unsigned char* host);
+int get_size(char* dns);
+int is_local(char* dns, char* local);
 
 //Global variables
 int configshmid;
