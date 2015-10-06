@@ -72,7 +72,14 @@ void delete_semaphores(){
   sem_unlink("CONFIG_MUTEX");
 }
 
+void handler() {
+    /* TODO: Escrever para estatisticas */
+    printf("Thank you! Shutting Down\n");
+    exit(1);
+}
+
 int main(int argc, char const *argv[]){
+  signal(SIGINT, handler);
   create_semaphores();
   create_shared_memory();
   start_config();
