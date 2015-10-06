@@ -284,7 +284,7 @@ int validate_local_domain(char *dns) {
 int validate_remote_domain(char *dns) {
     int i = 0; 
 
-    while (config->domains[i][0] != '\0' && i < N_DOMAINS) {
+    while (config->domains[i][0] != '\0' && i < MAX_N_DOMAINS) {
         if (compare_domains(dns, config->domains[i]) == TRUE) {
             return TRUE;
         }

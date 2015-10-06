@@ -1,7 +1,9 @@
 #include "main.h"
 
-//Creates a config_struct and fills it from path
-void update_config(char* path){
+//Gets info from config file and updates the config shared memory
+void update_config(char* path,int pid){
+  sem_wait(config_mutex);
+  printf("[%d] accessed\n",pid);
   FILE* file = fopen(path,"r");
   char aux;
   fscanf(file,"Threads = %d\n",&config->n_threads);
@@ -23,4 +25,6 @@ void update_config(char* path){
   fscanf(file,"LocalDomain = %s\n",config->local_domain);
   fscanf(file,"NamedPipeEstatisticas = %s\n",config->pipe_name);
   fclose(file);
+  printf("[%d] left\n",pid);
+  sem_post(config_mutex);
 }
