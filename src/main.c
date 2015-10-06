@@ -2,9 +2,6 @@
 
 void statistics(){
   printf("Started statistics process\n");
-  while(1){
-    
-  }
 }
 
 void start_statistics(){
@@ -15,22 +12,14 @@ void start_statistics(){
 }
 
 void run_config(){
-  printf("Started config process\n");
-  update_config("../data/config.txt");
-  printf("%d\n",config->n_threads);
-  int i;
-  printf("Domains:\n");
-  for(i=0;i<2;i++){
-    printf("%d:%s\n",i,config->domains[i]);
-  }
-  printf("Local Domain: %s\n",config->localdomain);
-  printf("PipeName: %s\n",config->pipename);
+  update_config("../data/config.txt",getpid());
 }
 
 void create_shared_memory(){
   configshmid = shmget(IPC_PRIVATE,sizeof(config_struct),IPC_CREAT|0700);
   config = (config_struct*)shmat(configshmid,NULL,0);
-  update_config("../data/config.txt");
+  update_config("../data/config.txt",getpid());
+  
 }
 
 void delete_shared_memory(){
@@ -44,13 +33,21 @@ void start_config(){
   }
 }
 
+void create_semaphores(){
+  sem_unlink("CONFIG_MUTEX");
+  config_mutex = sem_open("CONFIG_MUTEX",O_CREAT|O_EXCL,0700,1);
+}
+
 int main(int argc, char const *argv[]){
+  create_semaphores();
   create_shared_memory();
   start_config();
   start_statistics();
   request_manager(argc,argv);
   delete_shared_memory();
-  wait(NULL);
+  int i;
+  for(i=0;i<2;i++)
+    wait(NULL);
   return 0;
 }
 

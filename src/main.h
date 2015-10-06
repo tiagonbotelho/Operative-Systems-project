@@ -1,4 +1,4 @@
-
+#include<semaphore.h>
 #include<stdio.h>
 #include<string.h>
 #include<stdlib.h>
@@ -8,9 +8,10 @@
 #include<unistd.h>
 #include<sys/shm.h>
 #include<sys/wait.h>
+#include<sys/fcntl.h>
 
 //Constants
-#define N_DOMAINS 2
+#define MAX_N_DOMAINS 2
 #define MAX_DOMAIN_CHARS 10
 #define MAX_PIPE_NAME 15
 
@@ -21,7 +22,7 @@
 //Structs
 typedef struct config{
   int n_threads;
-  char domains[N_DOMAINS][MAX_DOMAIN_CHARS];
+  char domains[MAX_N_DOMAINS][MAX_DOMAIN_CHARS];
   char localdomain[MAX_DOMAIN_CHARS];
   char pipename[MAX_PIPE_NAME];
 } config_struct;
@@ -90,7 +91,7 @@ void start_statistics();
 void statistics();
 
 //Config.c
-void update_config(char* path);
+void update_config(char* path,int pid);
 
 //Dnsserver.c
 int request_manager(int argc ,const char *argv[]);
@@ -103,3 +104,5 @@ int is_local(char* dns, char* local);
 //Global variables
 int configshmid;
 config_struct *config;
+int configsemaphore;
+sem_t *config_mutex;
