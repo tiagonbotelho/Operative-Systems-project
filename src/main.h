@@ -22,8 +22,8 @@
 typedef struct config{
   int n_threads;
   char domains[N_DOMAINS][MAX_DOMAIN_CHARS];
-  char localdomain[MAX_DOMAIN_CHARS];
-  char pipename[MAX_PIPE_NAME];
+  char local_domain[MAX_DOMAIN_CHARS];
+  char pipe_name[MAX_PIPE_NAME];
 } config_struct;
 
 //DNS header structure
@@ -97,8 +97,9 @@ int request_manager(int argc ,const char *argv[]);
 void sendReply(unsigned short id, unsigned char* query, int ip_addr, int sockfd, struct sockaddr_in dest);
 u_char* convertRFC2Name(unsigned char* reader,unsigned char* buffer,int* count);
 void convertName2RFC(unsigned char* dns,unsigned char* host);
-int get_size(char* dns);
-int is_local(char* dns, char* local);
+int compare_domains(char *to_compare, char *comparable);
+int validate_local_domain(char *dns);
+int validate_remote_domain(char *dns);
 
 //Global variables
 int configshmid;

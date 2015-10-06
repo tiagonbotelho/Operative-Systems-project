@@ -20,7 +20,7 @@ void update_config(char* path){
     }
     config->domains[current_domain][current_pos++] = aux;
   }
-  fscanf(file,"LocalDomain = %s\n",config->localdomain);
-  fscanf(file,"NamedPipeEstatisticas = %s\n",config->pipename);
+  fscanf(file,"LocalDomain = %s\n",config->local_domain);
+  fscanf(file,"NamedPipeEstatisticas = %s\n",config->pipe_name);
   fclose(file);
 }

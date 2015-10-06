@@ -23,8 +23,8 @@ void run_config(){
   for(i=0;i<2;i++){
     printf("%d:%s\n",i,config->domains[i]);
   }
-  printf("Local Domain: %s\n",config->localdomain);
-  printf("PipeName: %s\n",config->pipename);
+  printf("Local Domain: %s\n",config->local_domain);
+  printf("PipeName: %s\n",config->pipe_name);
 }
 
 void create_shared_memory(){

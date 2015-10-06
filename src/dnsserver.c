@@ -262,19 +262,34 @@ int get_size(char *dns) {
     return i;
 }
 
-// True if the dns is local False if not
-int is_local(char *dns, char* local) {
-    int size = get_size(dns);
-    int sizeLocal = get_size(local);
-    printf("local: %d, dns: %d\n", sizeLocal, size);
+int compare_domains(char *to_compare, char *comparable) {
+    int size = strlen(to_compare);
+    int size_comp = strlen(comparable);
     int i;
-
-    for (i = 1; i <= sizeLocal; i++) {
-
-        if (dns[size - i] != local[sizeLocal - i]) {
+    
+    printf("%s %s\n", to_compare, comparable);
+    for (i = 1; i <= size_comp; i++) {
+        if (to_compare[size - i] != comparable[size_comp - i]) {
             return FALSE;
         }
     }
-    
+
     return TRUE;
+}
+
+int validate_local_domain(char *dns) {
+    return compare_domains(dns, config->local_domain);
+}
+
+int validate_remote_domain(char *dns) {
+    int i = 0; 
+
+    while (config->domains[i][0] != '\0' && i < N_DOMAINS) {
+        if (compare_domains(dns, config->domains[i]) == TRUE) {
+            return TRUE;
+        }
+        i++;
+    }
+
+    return FALSE; 
 }
