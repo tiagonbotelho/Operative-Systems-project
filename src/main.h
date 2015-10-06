@@ -5,6 +5,8 @@
 #include<arpa/inet.h>
 #include<netinet/in.h>
 #include<unistd.h>
+#include<sys/shm.h>
+#include<sys/wait.h>
 
 
 //Constants
@@ -20,7 +22,7 @@
 typedef struct config{
   int n_threads;
   char domains[N_DOMAINS][MAX_DOMAIN_CHARS];
-  char localdomain[1][MAX_DOMAIN_CHARS];
+  char localdomain[MAX_DOMAIN_CHARS];
   char pipename[MAX_PIPE_NAME];
 } config_struct;
 
@@ -83,15 +85,19 @@ struct QUERY
 
 //Main.c
 void start_config();
-void config();
+void run_config();
 void start_statistics();
 void statistics();
 
 //Config.c
-config_struct* get_configs(char* path);
+void update_config(char* path);
 
 //Dnsserver.c
 int request_manager(int argc ,const char *argv[]);
 void sendReply(unsigned short id, unsigned char* query, int ip_addr, int sockfd, struct sockaddr_in dest);
 u_char* convertRFC2Name(unsigned char* reader,unsigned char* buffer,int* count);
 void convertName2RFC(unsigned char* dns,unsigned char* host);
+
+//Global variables
+int configshmid;
+config_struct *config;
