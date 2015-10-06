@@ -49,7 +49,6 @@ void create_semaphores(){
 
 void *thread_behaviour(void *arg) {
     long n = (long)arg;
-
     printf("%ld is alive!\n", n);
     return NULL;
 }
@@ -68,6 +67,10 @@ void create_threads() {
     }
 }
 
+void delete_semaphores(){
+  sem_close(config_mutex);
+  sem_unlink("CONFIG_MUTEX");
+}
 
 int main(int argc, char const *argv[]){
   create_semaphores();
@@ -76,10 +79,11 @@ int main(int argc, char const *argv[]){
   start_statistics();
   create_threads();
   request_manager(argc,argv);
-  delete_shared_memory();
   int i;
   for(i=0;i<2;i++)
     wait(NULL);
+  delete_shared_memory();
+  delete_semaphores();
   return 0;
 }
 
