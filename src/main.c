@@ -12,10 +12,10 @@ void start_statistics(){
 }
 
 void run_config(){
+  int i;
   printf("Started config process\n");
   update_config("../data/config.txt", getpid());
   printf("%d\n",config->n_threads);
-  int i;
   printf("Domains:\n");
   for(i=0;i<2;i++){
     printf("%d:%s\n",i,config->domains[i]);
@@ -47,11 +47,34 @@ void create_semaphores(){
   config_mutex = sem_open("CONFIG_MUTEX",O_CREAT|O_EXCL,0700,1);
 }
 
+void *thread_behaviour(void *arg) {
+    long n = (long)arg;
+
+    printf("%ld is alive!\n", n);
+    return NULL;
+}
+
+void create_threads() {
+    int i;
+    pthread_t thread_pool[config->n_threads];
+
+    for (i = 0; i < config->n_threads; i++) {
+        pthread_create(&thread_pool[i], NULL, thread_behaviour, (void*)((long)i));
+    }
+
+    for (i = 0; i < config->n_threads; i++) {
+        printf("thread %d shutting down\n", i);
+        pthread_join(thread_pool[i], NULL);
+    }
+}
+
+
 int main(int argc, char const *argv[]){
   create_semaphores();
   create_shared_memory();
   start_config();
   start_statistics();
+  create_threads();
   request_manager(argc,argv);
   delete_shared_memory();
   int i;

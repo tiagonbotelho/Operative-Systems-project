@@ -9,6 +9,12 @@
 #include<sys/shm.h>
 #include<sys/wait.h>
 #include<sys/fcntl.h>
+#include<sys/types.h>
+#include<sys/mman.h>
+#include<sys/stat.h>
+#include<unistd.h>
+#include<pthread.h>
+
 
 //Constants
 #define MAX_N_DOMAINS 2
@@ -17,7 +23,6 @@
 
 #define TRUE 1
 #define FALSE 0
-
 
 //Structs
 typedef struct config{
