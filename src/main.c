@@ -53,8 +53,9 @@ void create_semaphores() {
 }
 
 void *thread_behaviour(void *arg) {
-    long n = (long)arg;
-    printf("%ld is alive!\n", n);
+    int n = (int)arg;
+    printf("%d is alive!\n", n);
+    /*print_mmapped_file(); prints all the domains for each thread*/ 
     return NULL;
 }
 

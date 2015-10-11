@@ -40,16 +40,17 @@ void mem_mapped_file_init(char *path) {
         exit(1);
     }
 
-    /* Print the file line by line */
+    close(fd);
+}
+
+void print_mmapped_file() {
+    char *line;
     char *aux = strdup(addr);
     line = strtok(aux, "\n");
-
-    while(line != NULL) {
+    while (line != NULL) {
         printf("%s\n", line);
         line = strtok(NULL, "\n");
     }
-
-    close(fd);
 }
 
 void mem_mapped_file_terminate() {

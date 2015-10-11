@@ -113,6 +113,7 @@ void update_config(char* path,int pid);
 domain_struct parse_line(char * line);
 void mem_mapped_file_init(char *path);
 void mem_mapped_file_terminate();
+void print_mmapped_file();
 
 
 //Dnsserver.c
