@@ -1,48 +1,53 @@
 #include "main.h"
 
-void statistics(){
+void statistics() {
   printf("Started statistics process\n");
 }
 
-void start_statistics(){
+void start_statistics() {
   if(fork()==0){
     statistics();
     exit(0);
   }
 }
 
-void run_config(){
+void run_config() {
   int i;
   printf("Started config process\n");
   update_config("../data/config.txt", getpid());
   printf("%d\n",config->n_threads);
   printf("Domains:\n");
-  for(i=0;i<2;i++){
+  for(i = 0; i < MAX_N_DOMAINS; i++) {
     printf("%d:%s\n",i,config->domains[i]);
   }
   printf("Local Domain: %s\n",config->local_domain);
   printf("PipeName: %s\n",config->pipe_name);
 }
 
-void create_shared_memory(){
+void create_ip_list() {
+
+}
+
+void create_shared_memory() {
+  create_ip_list();
   configshmid = shmget(IPC_PRIVATE,sizeof(config_struct),IPC_CREAT|0700);
   config = (config_struct*)shmat(configshmid,NULL,0);
   update_config("../data/config.txt",getpid());
   
 }
 
-void delete_shared_memory(){
+void delete_shared_memory() {
   shmctl(configshmid,IPC_RMID,NULL);
 }
 
-void start_config(){
+void start_config() {
   if(fork()==0){
     run_config();
     exit(0);
   }
 }
 
-void create_semaphores(){
+void create_semaphores() {
   sem_unlink("CONFIG_MUTEX");
   config_mutex = sem_open("CONFIG_MUTEX",O_CREAT|O_EXCL,0700,1);
 }
@@ -67,30 +72,43 @@ void create_threads() {
     }
 }
 
-void delete_semaphores(){
+void delete_semaphores() {
   sem_close(config_mutex);
   sem_unlink("CONFIG_MUTEX");
 }
 
-void handler() {
+void sigint_handler() {
     /* TODO: Escrever para estatisticas */
     printf("Thank you! Shutting Down\n");
     exit(1);
 }
 
-int main(int argc, char const *argv[]){
-  signal(SIGINT, handler);
-  create_semaphores();
-  create_shared_memory();
-  start_config();
-  start_statistics();
-  create_threads();
+/* Initializes semaphores shared mem config statistics and threads */
+void init() {
+    mem_mapped_file_init("../data/localdns.txt");
+    create_semaphores();
+    create_shared_memory();
+    start_config();
+    start_statistics();
+    create_threads();
+}
+
+/* Terminate processes shared_memory and semaphores */
+void terminate() {
+    int i;
+    for (i = 0; i < 2; i++) {
+        wait(NULL);
+    }
+    delete_shared_memory();
+    delete_semaphores();
+    mem_mapped_file_terminate();
+}
+
+int main(int argc, char const *argv[]) {
+  signal(SIGINT, sigint_handler);
+  init();
   request_manager(argc,argv);
-  int i;
-  for(i=0;i<2;i++)
-    wait(NULL);
-  delete_shared_memory();
-  delete_semaphores();
+  terminate();
   return 0;
 }
 

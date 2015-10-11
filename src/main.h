@@ -20,6 +20,11 @@
 #define MAX_N_DOMAINS 2
 #define MAX_DOMAIN_CHARS 10
 #define MAX_PIPE_NAME 15
+#define IP_SIZE 100
+#define DNS_SIZE 100
+#define MAX_LOCAL 100
+#define NUMINTS 1000
+#define FILE_SIZE NUMINTS*sizeof(char)
 
 #define TRUE 1
 #define FALSE 0
@@ -31,6 +36,12 @@ typedef struct config{
   char local_domain[MAX_DOMAIN_CHARS];
   char pipe_name[MAX_PIPE_NAME];
 } config_struct;
+
+
+typedef struct domain {
+    char ip[IP_SIZE];
+    char dns[DNS_SIZE];
+} domain_struct;
 
 //DNS header structure
 struct DNS_HEADER
@@ -98,6 +109,12 @@ void statistics();
 //Config.c
 void update_config(char* path,int pid);
 
+//mmapped_file.c
+domain_struct parse_line(char * line);
+void mem_mapped_file_init(char *path);
+void mem_mapped_file_terminate();
+
+
 //Dnsserver.c
 int request_manager(int argc ,const char *argv[]);
 void sendReply(unsigned short id, unsigned char* query, int ip_addr, int sockfd, struct sockaddr_in dest);
@@ -112,3 +129,5 @@ int configshmid;
 config_struct *config;
 int configsemaphore;
 sem_t *config_mutex;
+domain_struct *local_domains;
+char *addr; //Address that contains mmapped_file information
