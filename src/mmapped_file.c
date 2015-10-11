@@ -25,7 +25,8 @@ domain_struct parse_line(char *line) {
 
 void mem_mapped_file_init(char *path) {
     int fd;
-    int i;
+    /*int i;*/
+    char *line;
 
     fd = open(path, O_RDONLY);
     if (fd == -1) {
@@ -38,12 +39,14 @@ void mem_mapped_file_init(char *path) {
         close(fd);
         exit(1);
     }
-    for (i = 0; addr[i] != '\0'; i++) {
-        if (addr[i] == '\n') {
-            printf("NEW LINE\n");
-        } else {
-            printf("%d: %c\n", i, addr[i]);
-        }
+
+    /* Print the file line by line */
+    char *aux = strdup(addr);
+    line = strtok(aux, "\n");
+
+    while(line != NULL) {
+        printf("%s\n", line);
+        line = strtok(NULL, "\n");
     }
 
     close(fd);
