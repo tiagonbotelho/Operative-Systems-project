@@ -1,5 +1,7 @@
 #include "main.h"
 
+pthread_mutex_t mutex_thread = PTHREAD_MUTEX_INITIALIZER;
+
 void statistics() {
   printf("Started statistics process\n");
 }
@@ -55,7 +57,13 @@ void create_semaphores() {
 void *thread_behaviour(void *arg) {
     int n = (int)arg;
     printf("%d is alive!\n", n);
-    /*print_mmapped_file(); prints all the domains for each thread*/ 
+    pthread_mutex_lock(&mutex_thread);
+    printf("%d is writing...\n", n);
+    print_mmapped_file();  
+    printf("%d ended writing...\n", n);
+    pthread_mutex_unlock(&mutex_thread);
+
+    pthread_exit(NULL);
     return NULL;
 }
 
