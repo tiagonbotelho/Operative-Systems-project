@@ -16,7 +16,7 @@ void start_statistics() {
 void run_config() {
   int i;
   printf("Started config process\n");
-  update_config("../data/config.txt", getpid());
+  update_config("../data/config.txt");
   printf("%d\n",config->n_threads);
   printf("Domains:\n");
   for(i = 0; i < MAX_N_DOMAINS; i++) {
@@ -34,8 +34,7 @@ void create_shared_memory() {
   create_ip_list();
   configshmid = shmget(IPC_PRIVATE,sizeof(config_struct),IPC_CREAT|0700);
   config = (config_struct*)shmat(configshmid,NULL,0);
-  update_config("../data/config.txt",getpid());
-  
+  update_config("../data/config.txt");  
 }
 
 void delete_shared_memory() {

@@ -108,7 +108,7 @@ void start_statistics();
 void statistics();
 
 //Config.c
-void update_config(char* path,int pid);
+void update_config(char* path);
 
 //mmapped_file.c
 domain_struct parse_line(char * line);
