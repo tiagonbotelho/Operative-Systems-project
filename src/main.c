@@ -4,7 +4,14 @@ pthread_mutex_t mutex_thread = PTHREAD_MUTEX_INITIALIZER;
 
 void statistics() {
   printf("Started statistics process\n");
-  get_request(priority_queue);
+  dnsrequest test = get_request(priority_queue);
+  printf("Got %s\n",test.ip);
+  test = get_request(priority_queue);
+  printf("Got %s\n",test.ip);
+  test = get_request(priority_queue);
+  printf("Got %s\n",test.ip); 
+  test = get_request(priority_queue);
+  printf("Got %s\n",test.ip);
 }
 
 void start_statistics() {

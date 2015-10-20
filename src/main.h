@@ -114,7 +114,7 @@ void start_statistics();
 void statistics();
 
 //Queues.c
-void get_request(int queue);
+dnsrequest get_request(int queue);
 void schedule_request(int queue,char *ip, struct sockaddr_in dest);
 
 //Config.c
