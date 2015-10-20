@@ -4,6 +4,7 @@ pthread_mutex_t mutex_thread = PTHREAD_MUTEX_INITIALIZER;
 
 void statistics() {
   printf("Started statistics process\n");
+  get_request(priority_queue);
 }
 
 void start_statistics() {

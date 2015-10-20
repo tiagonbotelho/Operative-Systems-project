@@ -128,7 +128,7 @@ int request_manager(int argc ,const char *argv[])
 	if(validate_local_domain(query.name)){
 	  printf("Pedido local\n");
 	  printf("Vou enviar %s\n",query.name);
-	  schedule_request(priority_queue,query,dest);
+	  schedule_request(priority_queue,query.name,dest);
 	}
 	else if(validate_remote_domain(query.name)){
 	  printf("Pedido remoto\n");

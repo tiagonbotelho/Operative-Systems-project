@@ -103,7 +103,7 @@ struct QUERY
 
 typedef struct request{
   long mtype;
-  struct QUERY query;
+  char ip[IP_SIZE];
   struct sockaddr_in dest;
 } dnsrequest;
 
@@ -114,8 +114,8 @@ void start_statistics();
 void statistics();
 
 //Queues.c
-dnsrequest get_request(int queue);
-void schedule_request(int queue,struct QUERY query, struct sockaddr_in dest);
+void get_request(int queue);
+void schedule_request(int queue,char *ip, struct sockaddr_in dest);
 
 //Config.c
 void update_config(char* path);
