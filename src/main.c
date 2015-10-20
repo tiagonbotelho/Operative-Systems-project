@@ -55,13 +55,13 @@ void create_semaphores() {
 
 void *thread_behaviour(void *arg) {
     int n = (int)arg;
-    printf("%d is alive!\n", n);
+    /*printf("%d is alive!\n", n);
     pthread_mutex_lock(&mutex_thread);
     printf("%d is writing...\n", n);
     print_mmapped_file();  
     printf("%d ended writing...\n", n);
     pthread_mutex_unlock(&mutex_thread);
-
+    */
     pthread_exit(NULL);
     return NULL;
 }
@@ -94,6 +94,8 @@ void sigint_handler() {
 /* Initializes semaphores shared mem config statistics and threads */
 void init() {
     mem_mapped_file_init("../data/localdns.txt");
+    priority_queue = msgget(IPC_PRIVATE, IPC_CREAT|0700);
+    normal_queue = msgget(IPC_PRIVATE, IPC_CREAT|0700);
     create_semaphores();
     create_shared_memory();
     start_config();

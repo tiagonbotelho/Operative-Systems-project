@@ -1,14 +1,15 @@
 #include "main.h"
+
 int request_manager(int argc ,const char *argv[]) 
 {
-  printf("Started request manager process\n");
+    printf("Started request manager process\n");
     unsigned char buf[65536], *reader;
     int sockfd, stop;
     struct DNS_HEADER *dns = NULL;
-
+    
     struct sockaddr_in servaddr,dest;
     socklen_t len;
-
+    
     // Check arguments
     if(argc <= 1) {
         printf("Usage: dnsserver <port>\n");
@@ -48,7 +49,7 @@ int request_manager(int argc ,const char *argv[])
 
     // Failure on association of application to UDP port
     if(res < 0) {
-        printf("Error binding to port %d.\n", servaddr.sin_port);
+      printf("Error binding to port %d.\n", servaddr.sin_port);
 
         if(servaddr.sin_port <= 1024) {
             printf("To use ports below 1024 you may need additional permitions. Try to use a port higher than 1024.\n");
@@ -124,6 +125,17 @@ int request_manager(int argc ,const char *argv[])
         // Example reply to the received QUERY
         // (Currently replying 10.0.0.2 to all QUERY names)
         // ****************************************
+	if(validate_local_domain(query.name)){
+	  printf("Pedido local\n");
+	  printf("Vou enviar %s\n",query.name);
+	  schedule_request(priority_queue,query,dest);
+	}
+	else if(validate_remote_domain(query.name)){
+	  printf("Pedido remoto\n");
+	}
+	else{
+	  printf("Neither\n");
+	}
         sendReply(dns->id, query.name, inet_addr("10.0.0.2"), sockfd, dest);
     }
 
@@ -200,7 +212,7 @@ u_char* convertRFC2Name(unsigned char* reader,unsigned char* buffer,int* count) 
     name[0]='\0';
 
     while(*reader!=0) {
-        if(*reader>=192) {
+      if(*reader>=192) {
             offset = (*reader)*256 + *(reader+1) - 49152;
             reader = buffer + offset - 1;
             jumped = 1;
@@ -267,7 +279,6 @@ int compare_domains(char *to_compare, char *comparable) {
     int size_comp = strlen(comparable);
     int i;
     
-    printf("%s %s\n", to_compare, comparable);
     for (i = 1; i <= size_comp; i++) {
         if (to_compare[size - i] != comparable[size_comp - i]) {
             return FALSE;

@@ -13,6 +13,7 @@
 #include<sys/types.h>
 #include<sys/mman.h>
 #include<sys/stat.h>
+#include<sys/msg.h>
 #include<unistd.h>
 #include<pthread.h>
 
@@ -39,6 +40,7 @@ typedef struct config{
 } config_struct;
 
 
+
 typedef struct domain {
     char ip[IP_SIZE];
     char dns[DNS_SIZE];
@@ -54,7 +56,6 @@ struct DNS_HEADER
     unsigned char aa :1; // authoritive answer
     unsigned char opcode :4; // purpose of message
     unsigned char qr :1; // query/response flag
-
     unsigned char rcode :4; // response code
     unsigned char cd :1; // checking disabled
     unsigned char ad :1; // authenticated data
@@ -100,12 +101,21 @@ struct QUERY
     struct QUESTION *ques;
 };
 
+typedef struct request{
+  long mtype;
+  struct QUERY query;
+  struct sockaddr_in dest;
+} dnsrequest;
 
 //Main.c
 void start_config();
 void run_config();
 void start_statistics();
 void statistics();
+
+//Queues.c
+dnsrequest get_request(int queue);
+void schedule_request(int queue,struct QUERY query, struct sockaddr_in dest);
 
 //Config.c
 void update_config(char* path);
@@ -133,3 +143,5 @@ int configsemaphore;
 sem_t *config_mutex;
 domain_struct *local_domains;
 char *addr; //Address that contains mmapped_file information
+int priority_queue;
+int normal_queue;
