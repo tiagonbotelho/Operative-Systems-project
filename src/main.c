@@ -6,16 +6,11 @@ void statistics() {
   printf("Started statistics process\n");
   dnsrequest test = get_request(priority_queue);
   printf("Got %s\n",test.ip);
-  test = get_request(priority_queue);
-  printf("Got %s\n",test.ip);
-  test = get_request(priority_queue);
-  printf("Got %s\n",test.ip); 
-  test = get_request(priority_queue);
-  printf("Got %s\n",test.ip);
 }
 
 void start_statistics() {
   if(fork()==0){
+    printf("Stats pid = %lu",(long)getpid());
     statistics();
     exit(0);
   }
@@ -51,6 +46,7 @@ void delete_shared_memory() {
 
 void start_config() {
   if(fork()==0){
+    printf("Config pid = %lu",(long)getpid());
     run_config();
     exit(0);
   }
