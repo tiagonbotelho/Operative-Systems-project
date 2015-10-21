@@ -11,6 +11,5 @@ void schedule_request(int queue,char *ip, struct sockaddr_in dest){
 dnsrequest get_request(int queue){
   dnsrequest request;
   msgrcv(queue,&request,sizeof(dnsrequest)-sizeof(long),1,0);
-  printf("TEST - %s\n",request.ip);
   return request;
 }
