@@ -112,6 +112,8 @@ void start_config();
 void run_config();
 void start_statistics();
 void statistics();
+void terminate();
+
 
 //Queues.c
 dnsrequest get_request(int queue);
@@ -128,7 +130,7 @@ void print_mmapped_file();
 
 
 //Dnsserver.c
-int request_manager(int argc ,const char *argv[]);
+int request_manager(int port);
 void sendReply(unsigned short id, unsigned char* query, int ip_addr, int sockfd, struct sockaddr_in dest);
 u_char* convertRFC2Name(unsigned char* reader,unsigned char* buffer,int* count);
 void convertName2RFC(unsigned char* dns,unsigned char* host);

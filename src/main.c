@@ -59,13 +59,13 @@ void create_semaphores() {
 
 void *thread_behaviour(void *arg) {
     int n = (int)arg;
-    /*printf("%d is alive!\n", n);
+    printf("%d is alive!\n", n);
     pthread_mutex_lock(&mutex_thread);
     printf("%d is writing...\n", n);
     print_mmapped_file();  
     printf("%d ended writing...\n", n);
     pthread_mutex_unlock(&mutex_thread);
-    */
+    
     pthread_exit(NULL);
     return NULL;
 }
@@ -91,6 +91,7 @@ void delete_semaphores() {
 
 void sigint_handler() {
     /* TODO: Escrever para estatisticas */
+    terminate();
     printf("Thank you! Shutting Down\n");
     exit(1);
 }
@@ -119,9 +120,13 @@ void terminate() {
 }
 
 int main(int argc, char const *argv[]) {
+  if(argc <= 1) {
+    printf("Usage: dnsserver <port>\n");
+    exit(1);
+  }
   signal(SIGINT, sigint_handler);
   init();
-  request_manager(argc,argv);
+  request_manager(atoi(argv[1]));
   terminate();
   return 0;
 }
