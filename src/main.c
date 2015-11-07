@@ -36,6 +36,7 @@ void create_shared_memory() {
   configshmid = shmget(IPC_PRIVATE,sizeof(config_struct),IPC_CREAT|0700);
   config = (config_struct*)shmat(configshmid,NULL,0);
   update_config("../data/config.txt");  
+  printf("OLA\n");
 }
 
 void delete_shared_memory() {
@@ -55,13 +56,14 @@ void create_semaphores() {
   config_mutex = sem_open("CONFIG_MUTEX",O_CREAT|O_EXCL,0700,1);
 }
 
-void *thread_behaviour(void *arg) {
-    int n = (int)arg;
-    printf("%d is alive!\n", n);
+void *thread_behaviour(void *args) {
+    /*dnsrequest request = get_request(priority_queue);*/
     pthread_mutex_lock(&mutex_thread);
-    printf("%d is writing...\n", n);
-    print_mmapped_file();  
-    printf("%d ended writing...\n", n);
+    printf("Thread is writing...\n");
+    /*if (request.mtype == 2)  {*/
+    printf("LOCAL IP: %s\n", find_local_mmaped_file("fileserver.so.local"));
+    /*} */
+    printf("Thread sleeping");
     pthread_mutex_unlock(&mutex_thread);
     
     pthread_exit(NULL);

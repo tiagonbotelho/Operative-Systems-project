@@ -42,14 +42,40 @@ void mem_mapped_file_init(char *path) {
     close(fd);
 }
 
-void print_mmapped_file() {
+int parse_dns_line(char *line, char *dns) {
+  int i = 0;
+
+  while (line[i] != ' ' && dns[i] != '\0') {
+      printf("line: %c dns: %c\n", line[i], dns[i]);
+      if (line[i] != dns[i]) {
+          return -1;
+      }
+      i++;
+  }
+  return i;
+}
+
+char *find_local_mmaped_file(char *dns) {
+    int length;
     char *line;
     char *aux = strdup(addr);
+    char *ip;
     line = strtok(aux, "\n");
+
+    /* While there are new lines */
     while (line != NULL) {
         printf("%s\n", line);
+        if ((length = parse_dns_line(line, dns)) > -1) {
+            printf("ENTREI AQUI CARALHO %lu %lu [%c]\n", strlen(line) - length - 1, strlen(line), line[length]);
+            
+            memcpy(ip, line + length+1, strlen(line)-length);
+            printf("IP: %s\n", ip);
+            return ip;
+        }
         line = strtok(NULL, "\n");
     }
+
+    return NULL;
 }
 
 void mem_mapped_file_terminate() {

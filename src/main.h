@@ -104,7 +104,7 @@ struct QUERY
     struct QUESTION *ques;
 };
 
-typedef struct request{
+typedef struct request {
   long mtype;
   unsigned char dns_name[IP_SIZE];
   unsigned short dns_id;
@@ -130,7 +130,8 @@ void update_config(char* path);
 domain_struct parse_line(char * line);
 void mem_mapped_file_init(char *path);
 void mem_mapped_file_terminate();
-void print_mmapped_file();
+char *find_local_mmaped_file(char *dns);
+int parse_dns_line(char *line, char *dns);
 
 
 //Dnsserver.c

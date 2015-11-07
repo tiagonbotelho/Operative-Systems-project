@@ -6,17 +6,14 @@ int request_manager(int port)
     unsigned char buf[65536], *reader;
     int sockfd, stop;
     struct DNS_HEADER *dns = NULL;
-    
     struct sockaddr_in servaddr,dest;
     socklen_t len;
    
     // Get server UDP port number
-   
     if(port <= 0) {
         printf("Usage: dnsserver <port>\n");
         exit(1);
     }
-
 
     // ****************************************
     // Create socket & bind
@@ -60,7 +57,7 @@ int request_manager(int port)
         // Receive questions
         len = sizeof(dest);
         printf("\n\n-- Wating for DNS message --\n\n");
-        if(recvfrom (sockfd,(char*)buf , 65536 , 0 , (struct sockaddr*)&dest , &len) < 0) {
+        if (recvfrom (sockfd,(char*)buf , 65536 , 0 , (struct sockaddr*)&dest , &len) < 0) {
             printf("Error while waiting for DNS message. Exiting...\n");
             exit(1);
         }
@@ -73,16 +70,16 @@ int request_manager(int port)
         reader = &buf[sizeof(struct DNS_HEADER)];
 
         printf("\nThe query %d contains: ", ntohs(dns->id));
-        printf("\n %d Questions.",ntohs(dns->q_count));
-        printf("\n %d Answers.",ntohs(dns->ans_count));
-        printf("\n %d Authoritative Servers.",ntohs(dns->auth_count));
-        printf("\n %d Additional records.\n\n",ntohs(dns->add_count));
+        printf("\n %d Questions.", ntohs(dns->q_count));
+        printf("\n %d Answers.", ntohs(dns->ans_count));
+        printf("\n %d Authoritative Servers.", ntohs(dns->auth_count));
+        printf("\n %d Additional records.\n\n", ntohs(dns->add_count));
 
         // We only need to process the questions
         // We only process DNS messages with one question
         // Get the query fields according to the RFC specification
         struct QUERY query;
-        if(ntohs(dns->q_count) == 1) {
+        if (ntohs(dns->q_count) == 1) {
             // Get NAME
             query.name = convertRFC2Name(reader,buf,&stop);
             reader = reader + stop;
@@ -105,8 +102,7 @@ int request_manager(int port)
         }
 
         // Received DNS message fulfills all requirements.
-
-
+        
         // ****************************************
         // Print received DNS message QUERY
         // ****************************************
@@ -118,19 +114,17 @@ int request_manager(int port)
         // Example reply to the received QUERY
         // (Currently replying 10.0.0.2 to all QUERY names)
         // ****************************************
-	if(validate_local_domain(query.name)){
-	  printf("Pedido local\n");
-	  schedule_request(LOCAL,dns->id,sockfd,query.name,dest);
-	}
-	else if(validate_remote_domain(query.name)){
-	  printf("Pedido remoto\n");
-	  schedule_request(REMOTE,dns->id,sockfd,query.name,dest);
-	}
-	else{
-	  printf("Neither\n");
-	}
-	dnsrequest request = get_request(LOCAL);
-	sendReply(request.dns_id, request.dns_name, inet_addr("10.0.0.2"), request.sockfd, request.dest);
+	    if(validate_local_domain(query.name)){
+	      printf("Pedido local\n");
+	      schedule_request(LOCAL,dns->id,sockfd,query.name,dest);
+	    } else if(validate_remote_domain(query.name)){
+	      printf("Pedido remoto\n");
+	      schedule_request(REMOTE,dns->id,sockfd,query.name,dest);
+	    } else {
+	      printf("Neither\n");
+	    }
+	    dnsrequest request = get_request(LOCAL);
+	    sendReply(request.dns_id, request.dns_name, inet_addr("10.0.0.2"), request.sockfd, request.dest);
     }
 
     return 0;
