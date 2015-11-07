@@ -31,6 +31,9 @@
 #define TRUE 1
 #define FALSE 0
 
+#define LOCAL 2
+#define REMOTE 1
+
 //Structs
 typedef struct config{
   int n_threads;
@@ -103,7 +106,9 @@ struct QUERY
 
 typedef struct request{
   long mtype;
-  char ip[IP_SIZE];
+  unsigned char dns_name[IP_SIZE];
+  unsigned short dns_id;
+  int sockfd;
   struct sockaddr_in dest;
 } dnsrequest;
 
@@ -114,12 +119,11 @@ void start_statistics();
 void statistics();
 void terminate();
 
-
 //Queues.c
 dnsrequest get_request(int queue);
-void schedule_request(int queue,char *ip, struct sockaddr_in dest);
+void schedule_request(int queue,short dns_id, int sockfd, char *ip, struct sockaddr_in dest);
 
-//Config.c
+//Config.cd
 void update_config(char* path);
 
 //mmapped_file.c
@@ -145,5 +149,4 @@ int configsemaphore;
 sem_t *config_mutex;
 domain_struct *local_domains;
 char *addr; //Address that contains mmapped_file information
-int priority_queue;
-int normal_queue;
+int requests_queue;

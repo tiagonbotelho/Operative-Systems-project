@@ -1,15 +1,18 @@
 #include"main.h"
 
-void schedule_request(int queue,char *ip, struct sockaddr_in dest){
+void schedule_request(int queue,short dns_id, int sockfd, char *dns_name, struct sockaddr_in dest){
   dnsrequest request;
-  request.mtype = 1;
+  request.mtype = queue;
   memcpy(&request.dest,&dest,sizeof(struct sockaddr_in));
-  memcpy(&request.ip,ip,sizeof(char)*IP_SIZE);
-  msgsnd(queue,&request,sizeof(dnsrequest)-sizeof(long),0);
+  memcpy(&request.dns_name,dns_name,sizeof(char)*IP_SIZE);
+  request.dns_id = dns_id;
+  request.sockfd = sockfd;
+  msgsnd(requests_queue,&request,sizeof(dnsrequest)-sizeof(long),queue);
 }
 
 dnsrequest get_request(int queue){
   dnsrequest request;
-  msgrcv(queue,&request,sizeof(dnsrequest)-sizeof(long),1,0);
+  msgrcv(requests_queue,&request,sizeof(dnsrequest)-sizeof(long),queue,0);
   return request;
 }
+

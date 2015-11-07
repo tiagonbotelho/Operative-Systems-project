@@ -9,7 +9,7 @@ int request_manager(int port)
     
     struct sockaddr_in servaddr,dest;
     socklen_t len;
-    
+   
     // Get server UDP port number
    
     if(port <= 0) {
@@ -120,16 +120,17 @@ int request_manager(int port)
         // ****************************************
 	if(validate_local_domain(query.name)){
 	  printf("Pedido local\n");
-	  printf("Vou enviar %s\n",query.name);
-	  schedule_request(priority_queue,query.name,dest);
+	  schedule_request(LOCAL,dns->id,sockfd,query.name,dest);
 	}
 	else if(validate_remote_domain(query.name)){
 	  printf("Pedido remoto\n");
+	  schedule_request(REMOTE,dns->id,sockfd,query.name,dest);
 	}
 	else{
 	  printf("Neither\n");
 	}
-        sendReply(dns->id, query.name, inet_addr("10.0.0.2"), sockfd, dest);
+	dnsrequest request = get_request(LOCAL);
+	sendReply(request.dns_id, request.dns_name, inet_addr("10.0.0.2"), request.sockfd, request.dest);
     }
 
     return 0;

@@ -4,8 +4,6 @@ pthread_mutex_t mutex_thread = PTHREAD_MUTEX_INITIALIZER;
 
 void statistics() {
   printf("Started statistics process\n");
-  dnsrequest test = get_request(priority_queue);
-  printf("Got %s\n",test.ip);
 }
 
 void start_statistics() {
@@ -99,8 +97,7 @@ void sigint_handler() {
 /* Initializes semaphores shared mem config statistics and threads */
 void init() {
     mem_mapped_file_init("../data/localdns.txt");
-    priority_queue = msgget(IPC_PRIVATE, IPC_CREAT|0700);
-    normal_queue = msgget(IPC_PRIVATE, IPC_CREAT|0700);
+    requests_queue = msgget(IPC_PRIVATE, IPC_CREAT|0700);
     create_semaphores();
     create_shared_memory();
     start_config();
@@ -114,6 +111,7 @@ void terminate() {
     for (i = 0; i < 2; i++) {
         wait(NULL);
     }
+    msgctl(requests_queue, IPC_RMID, NULL);
     delete_shared_memory();
     delete_semaphores();
     mem_mapped_file_terminate();
