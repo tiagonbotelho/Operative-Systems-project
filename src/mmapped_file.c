@@ -67,7 +67,7 @@ char *find_local_mmaped_file(char *dns) {
         printf("%s\n", line);
         if ((length = parse_dns_line(line, dns)) > -1) {
             printf("ENTREI AQUI CARALHO %lu %lu [%c]\n", strlen(line) - length - 1, strlen(line), line[length]);
-            
+	    
             memcpy(ip, line + length+1, strlen(line)-length);
             printf("IP: %s\n", ip);
             return ip;

@@ -4,50 +4,10 @@ int request_manager(int port)
 {
     printf("Started request manager process\n");
     unsigned char buf[65536], *reader;
-    int sockfd, stop;
+    int stop;
     struct DNS_HEADER *dns = NULL;
-    struct sockaddr_in servaddr,dest;
+    struct sockaddr_in dest;
     socklen_t len;
-   
-    // Get server UDP port number
-    if(port <= 0) {
-        printf("Usage: dnsserver <port>\n");
-        exit(1);
-    }
-
-    // ****************************************
-    // Create socket & bind
-    // ****************************************
-
-    // Create UDP socket
-    sockfd = socket(AF_INET , SOCK_DGRAM , IPPROTO_UDP); //UDP packet for DNS queries
-
-    // If failed to open socket
-    if (sockfd < 0) {
-        printf("ERROR opening socket.\n");
-        exit(1);
-    }
-
-    // Prepare UDP to bind port
-    bzero(&servaddr,sizeof(servaddr));
-    servaddr.sin_family = AF_INET;
-    servaddr.sin_addr.s_addr=htonl(INADDR_ANY);
-    servaddr.sin_port=htons(port);
-
-    // Bind application to UDP port
-    int res = bind(sockfd,(struct sockaddr *)&servaddr,sizeof(servaddr));
-
-    // Failure on association of application to UDP port
-    if(res < 0) {
-      printf("Error binding to port %d.\n", servaddr.sin_port);
-
-        if(servaddr.sin_port <= 1024) {
-            printf("To use ports below 1024 you may need additional permitions. Try to use a port higher than 1024.\n");
-        } else {
-            printf("Please make sure this UDP port is not being used.\n");
-        }
-        exit(1);
-    }
 
     // ****************************************
     // Receive questions

@@ -1,5 +1,6 @@
 #include "main.h"
 
+
 //Gets info from config file and updates the config shared memory
 void update_config(char* path){
   sem_wait(config_mutex);

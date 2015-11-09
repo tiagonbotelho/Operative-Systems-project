@@ -31,8 +31,8 @@
 #define TRUE 1
 #define FALSE 0
 
-#define LOCAL 2
-#define REMOTE 1
+#define LOCAL 2 //This numbers because mtype can't be 0
+#define REMOTE 1 
 
 //Structs
 typedef struct config{
@@ -123,7 +123,7 @@ void terminate();
 dnsrequest get_request(int queue);
 void schedule_request(int queue,short dns_id, int sockfd, char *ip, struct sockaddr_in dest);
 
-//Config.cd
+//Config.c
 void update_config(char* path);
 
 //mmapped_file.c
@@ -135,7 +135,7 @@ int parse_dns_line(char *line, char *dns);
 
 
 //Dnsserver.c
-int request_manager(int port);
+int request_manager();
 void sendReply(unsigned short id, unsigned char* query, int ip_addr, int sockfd, struct sockaddr_in dest);
 u_char* convertRFC2Name(unsigned char* reader,unsigned char* buffer,int* count);
 void convertName2RFC(unsigned char* dns,unsigned char* host);
@@ -144,10 +144,11 @@ int validate_local_domain(char *dns);
 int validate_remote_domain(char *dns);
 
 //Global variables
-int configshmid;
-config_struct *config;
-int configsemaphore;
-sem_t *config_mutex;
-domain_struct *local_domains;
+int configshmid; //shared memory id to configs
+config_struct *config; //config structure in shared memory
+sem_t *config_mutex; //mutex to prevent racing in config
+domain_struct *local_domains; //?? is this necessary?
 char *addr; //Address that contains mmapped_file information
-int requests_queue;
+int requests_queue; //message queue for requests
+int sockfd; //Socket that receives requests
+pthread_mutex_t mutex_thread; //Temporary mutex for threads
