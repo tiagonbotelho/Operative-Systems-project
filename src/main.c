@@ -55,31 +55,37 @@ void create_semaphores() {
 }
 
 void *thread_behaviour(void *args) {
-    /*dnsrequest request = get_request(priority_queue);*/
-    pthread_mutex_lock(&mutex_thread);
-    printf("Thread is writing...\n");
+  while(1){
+    printf("Thread %lu is locked\n",(long)args);
+    pthread_cond_wait(&cond_thread,&mutex_thread);
+    printf("Thread %lu is writing...\n",(long)args);
+    dnsrequest request = get_request(LOCAL);
+    sendReply(request.dns_id, request.dns_name, inet_addr("10.0.0.2"), request.sockfd, request.dest);
+
     /*if (request.mtype == 2)  {*/
     //printf("LOCAL IP: %s\n", find_local_mmaped_file("fileserver.so.local"));
     /*} */
     printf("Thread sleeping");
     pthread_mutex_unlock(&mutex_thread);
-    
-    pthread_exit(NULL);
-    return NULL;
+  }
+  pthread_exit(NULL);
+  return NULL;
+
 }
 
 void create_threads() {
     int i;
     pthread_t thread_pool[config->n_threads];
     pthread_mutex_init(&mutex_thread,NULL);
+    pthread_cond_init(&cond_thread,NULL);
     for (i = 0; i < config->n_threads; i++) {
-        pthread_create(&thread_pool[i], NULL, thread_behaviour, (void*)((long)i));
+      pthread_create(&thread_pool[i], NULL, thread_behaviour, (void*)((long)i));
     }
 
-    for (i = 0; i < config->n_threads; i++) {
+    /*for (i = 0; i < config->n_threads; i++) {
         printf("thread %d shutting down\n", i);
         pthread_join(thread_pool[i], NULL);
-    }
+	}*/
 }
 
 void delete_semaphores() {

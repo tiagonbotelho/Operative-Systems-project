@@ -77,14 +77,15 @@ int request_manager(int port)
 	    if(validate_local_domain(query.name)){
 	      printf("Pedido local\n");
 	      schedule_request(LOCAL,dns->id,sockfd,query.name,dest);
+	      pthread_cond_signal(&cond_thread);
 	    } else if(validate_remote_domain(query.name)){
 	      printf("Pedido remoto\n");
 	      schedule_request(REMOTE,dns->id,sockfd,query.name,dest);
 	    } else {
 	      printf("Neither\n");
 	    }
-	    dnsrequest request = get_request(LOCAL);
-	    sendReply(request.dns_id, request.dns_name, inet_addr("10.0.0.2"), request.sockfd, request.dest);
+	    //dnsrequest request = get_request(LOCAL);
+	    //sendReply(request.dns_id, request.dns_name, inet_addr("10.0.0.2"), request.sockfd, request.dest);
     }
 
     return 0;

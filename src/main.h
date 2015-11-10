@@ -152,3 +152,4 @@ char *addr; //Address that contains mmapped_file information
 int requests_queue; //message queue for requests
 int sockfd; //Socket that receives requests
 pthread_mutex_t mutex_thread; //Temporary mutex for threads
+pthread_cond_t cond_thread; //Temporary conditional variable
