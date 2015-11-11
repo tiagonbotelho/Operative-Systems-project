@@ -13,7 +13,7 @@ void schedule_request(int queue,short dns_id, int sockfd, char *dns_name, struct
 dnsrequest get_request(int queue){
   dnsrequest request;
 
-  if (msgrcv(requests_queue,&request,sizeof(dnsrequest)-sizeof(long),queue,0) == -1) {
+  if (msgrcv(requests_queue,&request,sizeof(dnsrequest)-sizeof(long),queue,IPC_NOWAIT) == -1) {
     request.dns_id = -1;
   }
   return request;
