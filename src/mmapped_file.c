@@ -46,13 +46,25 @@ int parse_dns_line(char *line, char *dns) {
   int i = 0;
 
   while (line[i] != ' ' && dns[i] != '\0') {
-      printf("line: %c dns: %c\n", line[i], dns[i]);
       if (line[i] != dns[i]) {
           return -1;
       }
       i++;
   }
   return i;
+}
+
+char *copy_string(char *line, int length) {
+    int j;
+    int i = 0;
+    char *string = (char*)malloc(sizeof(char) * (strlen(line) - length));
+
+    for (j = length; line[j] != '\0'; j++) {
+      string[i] = line[j];
+      i++;
+    }
+    string[i] = '\0';
+    return string;
 }
 
 char *find_local_mmaped_file(char *dns) {
@@ -64,17 +76,13 @@ char *find_local_mmaped_file(char *dns) {
 
     /* While there are new lines */
     while (line != NULL) {
-        printf("%s\n", line);
         if ((length = parse_dns_line(line, dns)) > -1) {
-            printf("ENTREI AQUI CARALHO %lu %lu [%c]\n", strlen(line) - length - 1, strlen(line), line[length]);
-	    
-            memcpy(ip, line + length+1, strlen(line)-length);
-            printf("IP: %s\n", ip);
+
+            ip = copy_string(line, (length + 1));
             return ip;
         }
         line = strtok(NULL, "\n");
     }
-
     return NULL;
 }
 

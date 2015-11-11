@@ -7,7 +7,6 @@ void update_config(char* path){
   FILE* file = fopen(path,"r");
   char aux;
   fscanf(file,"Threads = %d\n",&config->n_threads);
-  printf("PUTA\n");
   fseek(file,strlen("Domains = "),SEEK_CUR);
   int current_domain = 0;
   int current_pos =0;

@@ -54,20 +54,40 @@ void create_semaphores() {
   config_mutex = sem_open("CONFIG_MUTEX",O_CREAT|O_EXCL,0700,1);
 }
 
-void *thread_behaviour(void *args) {
-  while(1){
-    printf("Thread %lu is locked\n",(long)args);
-    pthread_cond_wait(&cond_thread,&mutex_thread);
-    printf("Thread %lu is writing...\n",(long)args);
-    dnsrequest request = get_request(LOCAL);
-    sendReply(request.dns_id, request.dns_name, inet_addr("10.0.0.2"), request.sockfd, request.dest);
+void send_reply(dnsrequest request, char *ip) {
+    sendReply(request.dns_id, request.dns_name, inet_addr(ip), request.sockfd, request.dest);
+}
 
-    /*if (request.mtype == 2)  {*/
-    //printf("LOCAL IP: %s\n", find_local_mmaped_file("fileserver.so.local"));
-    /*} */
-    printf("Thread sleeping");
-    pthread_mutex_unlock(&mutex_thread);
-  }
+void *thread_behaviour(void *args) {
+    dnsrequest request;
+    char *request_ip;
+    while(1){
+        printf("Thread %lu is locked\n",(long)args);
+        pthread_cond_wait(&cond_thread,&mutex_thread);
+        printf("Thread %lu is writing...\n",(long)args);
+        request = get_request(LOCAL);
+
+        if (request.dns_id == -1) {
+             /*TODO: Procurar remotos */
+            dnsrequest aux_request = get_request(REMOTE);
+            if (aux_request.dns_id == -1) {
+                printf("ola\n");
+                send_reply(aux_request, "0.0.0.0");
+            } else {
+                printf("hello\n");
+                send_reply(aux_request, "127.0.0.1");
+            }
+        } else {
+            if ((request_ip = find_local_mmaped_file(request.dns_name)) != NULL) {
+                send_reply(request, request_ip);
+            } else {
+                send_reply(request, "0.0.0.0");
+            }
+        }
+
+        printf("Thread sleeping");
+        pthread_mutex_unlock(&mutex_thread);
+    }
   pthread_exit(NULL);
   return NULL;
 
@@ -81,11 +101,6 @@ void create_threads() {
     for (i = 0; i < config->n_threads; i++) {
       pthread_create(&thread_pool[i], NULL, thread_behaviour, (void*)((long)i));
     }
-
-    /*for (i = 0; i < config->n_threads; i++) {
-        printf("thread %d shutting down\n", i);
-        pthread_join(thread_pool[i], NULL);
-	}*/
 }
 
 void delete_semaphores() {
