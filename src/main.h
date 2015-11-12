@@ -107,7 +107,7 @@ struct QUERY
 typedef struct request {
   long mtype;
   unsigned char dns_name[IP_SIZE];
-  unsigned short dns_id;
+  short dns_id;
   int sockfd;
   struct sockaddr_in dest;
 } dnsrequest;
