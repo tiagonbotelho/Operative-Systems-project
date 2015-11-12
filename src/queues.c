@@ -7,7 +7,8 @@ void schedule_request(int queue,short dns_id, int sockfd, char *dns_name, struct
   memcpy(&request.dns_name,dns_name,sizeof(char)*IP_SIZE);
   request.dns_id = dns_id;
   request.sockfd = sockfd;
-  msgsnd(requests_queue,&request,sizeof(dnsrequest)-sizeof(long),queue);
+  msgsnd(requests_queue,&request,sizeof(dnsrequest)-sizeof(long),0);
+  
 }
 
 dnsrequest get_request(int queue){

@@ -1,4 +1,4 @@
-#include<semaphore.h>
+ #include<semaphore.h>
 #include<stdio.h>
 #include<string.h>
 #include<stdlib.h>
@@ -118,6 +118,8 @@ void run_config();
 void start_statistics();
 void statistics();
 void terminate();
+void create_pipe();
+
 
 //Queues.c
 dnsrequest get_request(int queue);
@@ -147,9 +149,9 @@ int validate_remote_domain(char *dns);
 int configshmid; //shared memory id to configs
 config_struct *config; //config structure in shared memory
 sem_t *config_mutex; //mutex to prevent racing in config
-domain_struct *local_domains; //?? is this necessary?
 char *addr; //Address that contains mmapped_file information
 int requests_queue; //message queue for requests
 int sockfd; //Socket that receives requests
 pthread_mutex_t mutex_thread; //Temporary mutex for threads
 pthread_cond_t cond_thread; //Temporary conditional variable
+int pipo[2]; //Pipe for statistics

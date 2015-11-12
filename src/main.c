@@ -2,6 +2,7 @@
 
 
 void statistics() {
+  create_pipe();
   printf("Started statistics process\n");
 }
 
@@ -100,6 +101,8 @@ void sigint_handler() {
     exit(1);
 }
 
+
+
 void create_socket(int port){
   
     struct sockaddr_in servaddr;
@@ -123,7 +126,7 @@ void create_socket(int port){
     servaddr.sin_family = AF_INET;
     servaddr.sin_addr.s_addr=htonl(INADDR_ANY);
     servaddr.sin_port=htons(port);
-
+    
     // Bind application to UDP port
     int res = bind(sockfd,(struct sockaddr *)&servaddr,sizeof(servaddr));
 
@@ -137,18 +140,31 @@ void create_socket(int port){
             printf("Please make sure this UDP port is not being used.\n");
         }
         exit(1);
-    }
+   } 
+}
+
+void create_pipe(){
+  sunlink
+  sem_wait(config_mutex);
+  if(mkfifo(config->pipe_name,O_CREAT|O_EXCL|0600)<0){
+    perror("Cannot create pipe: ");
+    exit(0);
+  }
+  sem_post(config_mutex);
 }
 
 /* Initializes semaphores shared mem config statistics and threads */
-void init() {
-    mem_mapped_file_init("../data/localdns.txt");
-    requests_queue = msgget(IPC_PRIVATE, IPC_CREAT|0700);
+void init(int port) {
     create_semaphores();
     create_shared_memory();
     start_config();
+    create_pipe();
     start_statistics();
-    create_threads();
+    create_threads();    
+    mem_mapped_file_init("../data/localdns.txt");
+    requests_queue = msgget(IPC_PRIVATE, IPC_CREAT|0700);
+    create_socket(port);
+    
 }
 
 /* Terminate processes shared_memory and semaphores */
@@ -169,8 +185,7 @@ int main(int argc, char const *argv[]) {
     exit(1);
   }
   signal(SIGINT, sigint_handler);
-  create_socket(atoi(argv[1]));
-  init();
+  init(atoi(argv[1]));
   request_manager();
   terminate();
   return 0;
