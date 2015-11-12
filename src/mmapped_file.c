@@ -42,7 +42,7 @@ void mem_mapped_file_init(char *path) {
     close(fd);
 }
 
-int parse_dns_line(char *line, char *dns) {
+int parse_dns_line(unsigned char *line,unsigned char *dns) {
   int i = 0;
 
   while (line[i] != ' ' && dns[i] != '\0') {
@@ -67,7 +67,7 @@ char *copy_string(char *line, int length) {
     return string;
 }
 
-char *find_local_mmaped_file(char *dns) {
+char *find_local_mmaped_file(unsigned char *dns) {
     int length;
     char *line;
     char *aux = strdup(addr);

@@ -74,19 +74,19 @@ int request_manager(int port)
         // Example reply to the received QUERY
         // (Currently replying 10.0.0.2 to all QUERY names)
         // ****************************************
-	    if(validate_local_domain(query.name)){
-	      printf("Pedido local\n");
-	      schedule_request(LOCAL,dns->id,sockfd,query.name,dest);
-	      pthread_cond_signal(&cond_thread);
-	    } else if(validate_remote_domain(query.name)){
-	      printf("Pedido remoto\n");
-	      schedule_request(REMOTE,dns->id,sockfd,query.name,dest);
-	      pthread_cond_signal(&cond_thread);
-	    } else {
-	      printf("Neither\n");
-	      schedule_request(REMOTE,dns->id,sockfd,query.name,dest);
-	      pthread_cond_signal(&cond_thread);
-	    }
+	if(validate_local_domain(query.name)){
+	  printf("Pedido local\n");
+	  schedule_request(LOCAL,dns->id,sockfd,query.name,dest);
+	  pthread_cond_signal(&cond_thread);
+	} else if(validate_remote_domain(query.name)){
+	  printf("Pedido remoto\n");
+	  schedule_request(REMOTE,dns->id,sockfd,query.name,dest);
+	  pthread_cond_signal(&cond_thread);
+	} else {
+	  printf("Neither\n");
+	  schedule_request(REMOTE,dns->id,sockfd,query.name,dest);
+	  pthread_cond_signal(&cond_thread);
+	}
     }
 
     return 0;
@@ -224,7 +224,7 @@ int get_size(char *dns) {
     return i;
 }
 
-int compare_domains(char *to_compare, char *comparable) {
+int compare_domains(unsigned char *to_compare, unsigned char *comparable) {
     int size = strlen(to_compare);
     int size_comp = strlen(comparable);
     int i;
@@ -238,11 +238,11 @@ int compare_domains(char *to_compare, char *comparable) {
     return TRUE;
 }
 
-int validate_local_domain(char *dns) {
+int validate_local_domain(unsigned char *dns) {
     return compare_domains(dns, config->local_domain);
 }
 
-int validate_remote_domain(char *dns) {
+int validate_remote_domain(unsigned char *dns) {
     int i = 0; 
 
     while (config->domains[i][0] != '\0' && i < MAX_N_DOMAINS) {

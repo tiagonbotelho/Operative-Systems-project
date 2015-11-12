@@ -159,7 +159,7 @@ void create_socket(int port){
 }
 
 void create_pipe(){
-  sunlink
+  unlink(config->pipe_name);
   sem_wait(config_mutex);
   if(mkfifo(config->pipe_name,O_CREAT|O_EXCL|0600)<0){
     perror("Cannot create pipe: ");

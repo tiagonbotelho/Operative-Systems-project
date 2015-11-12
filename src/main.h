@@ -1,4 +1,4 @@
- #include<semaphore.h>
+#include<semaphore.h>
 #include<stdio.h>
 #include<string.h>
 #include<stdlib.h>
@@ -132,8 +132,8 @@ void update_config(char* path);
 domain_struct parse_line(char * line);
 void mem_mapped_file_init(char *path);
 void mem_mapped_file_terminate();
-char *find_local_mmaped_file(char *dns);
-int parse_dns_line(char *line, char *dns);
+char *find_local_mmaped_file(unsigned char *dns);
+int parse_dns_line(unsigned char *line, unsigned char *dns);
 
 
 //Dnsserver.c
@@ -141,9 +141,9 @@ int request_manager();
 void sendReply(unsigned short id, unsigned char* query, int ip_addr, int sockfd, struct sockaddr_in dest);
 u_char* convertRFC2Name(unsigned char* reader,unsigned char* buffer,int* count);
 void convertName2RFC(unsigned char* dns,unsigned char* host);
-int compare_domains(char *to_compare, char *comparable);
-int validate_local_domain(char *dns);
-int validate_remote_domain(char *dns);
+int compare_domains(unsigned char *to_compare, unsigned char *comparable);
+int validate_local_domain(unsigned char *dns);
+int validate_remote_domain(unsigned char *dns);
 
 //Global variables
 int configshmid; //shared memory id to configs
