@@ -59,6 +59,21 @@ void send_reply(dnsrequest request, char *ip) {
     sendReply(request.dns_id, request.dns_name, inet_addr(ip), request.sockfd, request.dest);
 }
 
+void handle_remote(char dns_name[]){
+  char *command = (char *)malloc(sizeof("dig ")+ sizeof(dns_name) + 1);
+  strcpy(command,"dig ");
+  strcat(command,dns_name);
+  FILE *in;
+  char buff[512];
+  if(!(in = popen(command, "r"))){
+    terminate();
+  }
+  while(fgets(buff, sizeof(buff), in)!=NULL){
+    printf("%s",buff);
+  }
+  close(in);
+}
+
 void *thread_behaviour(void *args) {
     dnsrequest request;
     char *request_ip;
@@ -69,14 +84,12 @@ void *thread_behaviour(void *args) {
         request = get_request(LOCAL);
 
         if (request.dns_id == -1) {
-             /*TODO: Procurar remotos */
             dnsrequest aux_request = get_request(REMOTE);
             if (aux_request.dns_id == -1) {
                 printf("ola\n");
                 send_reply(aux_request, "0.0.0.0");
-            } else {
-                printf("hello\n");
-                send_reply(aux_request, "127.0.0.1");
+            } else {;
+		handle_remote(aux_request.dns_name);
             }
         } else {
             if ((request_ip = find_local_mmaped_file(request.dns_name)) != NULL) {
