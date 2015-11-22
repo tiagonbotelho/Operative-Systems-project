@@ -1,14 +1,17 @@
 #include "main.h"
 
-
 void statistics() {
-  create_pipe();
-  printf("Started statistics process\n");
+  print_stats();
+  while(TRUE){
+    sleep(30);
+    print_stats();
+  }
 }
 
 void start_statistics() {
   if(fork()==0){
     printf("Stats pid = %lu",(long)getpid());
+
     statistics();
     exit(0);
   }
@@ -27,12 +30,8 @@ void run_config() {
   printf("PipeName: %s\n",config->pipe_name);
 }
 
-void create_ip_list() {
-
-}
 
 void create_shared_memory() {
-  create_ip_list();
   configshmid = shmget(IPC_PRIVATE,sizeof(config_struct),IPC_CREAT|0700);
   config = (config_struct*)shmat(configshmid,NULL,0);
   update_config("../data/config.txt");  
@@ -69,7 +68,7 @@ void handle_remote(char dns_name[]){
     terminate();
   }
   while(fgets(buff, sizeof(buff), in)!=NULL){
-    printf("%s",buff);
+    printf("|%s|",buff);
   }
   close(in);
 }
@@ -98,7 +97,6 @@ void *thread_behaviour(void *args) {
                 send_reply(request, "0.0.0.0");
             }
         }
-
         printf("Thread sleeping");
         pthread_mutex_unlock(&mutex_thread);
     }
@@ -183,16 +181,16 @@ void create_pipe(){
 
 /* Initializes semaphores shared mem config statistics and threads */
 void init(int port) {
+    initialize_stats();
     create_semaphores();
     create_shared_memory();
     start_config();
     create_pipe();
     start_statistics();
-    create_threads();    
+    create_threads();
     mem_mapped_file_init("../data/localdns.txt");
     requests_queue = msgget(IPC_PRIVATE, IPC_CREAT|0700);
     create_socket(port);
-    
 }
 
 /* Terminate processes shared_memory and semaphores */

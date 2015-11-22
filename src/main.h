@@ -16,7 +16,7 @@
 #include<sys/msg.h>
 #include<unistd.h>
 #include<pthread.h>
-
+#include<time.h>
 
 //Constants
 #define MAX_N_DOMAINS 2
@@ -42,7 +42,13 @@ typedef struct config{
   char pipe_name[MAX_PIPE_NAME];
 } config_struct;
 
-
+typedef struct stats{
+  struct tm *start_time;
+  int requests_denied;
+  int local_domains_resolved;
+  int extern_domains_resolved;
+  struct tm *last_time;
+} stats_struct;
 
 typedef struct domain {
     char ip[IP_SIZE];
@@ -144,6 +150,10 @@ void convertName2RFC(unsigned char* dns,unsigned char* host);
 int compare_domains(unsigned char *to_compare, unsigned char *comparable);
 int validate_local_domain(unsigned char *dns);
 int validate_remote_domain(unsigned char *dns);
+
+//Stats.c
+void print_stats();
+stats_struct initialize_stats();
 
 //Global variables
 int configshmid; //shared memory id to configs

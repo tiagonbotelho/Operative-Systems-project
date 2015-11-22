@@ -3,6 +3,15 @@
 int request_manager(int port) 
 {
     printf("Started request manager process\n");
+    stats_struct stats = initialize_stats();
+    char *pipe_name = (char *)malloc(MAX_PIPE_NAME);
+    sem_wait(config_mutex);
+    strcpy(pipe_name,config->pipe_name);
+    sem_post(config_mutex);  
+    int fd = open(pipe_name, O_WRONLY);;
+    printf("heheh\n");
+    write(fd,&stats,sizeof(stats_struct));
+    printf("Wrote %s\n",pipe_name);
     unsigned char buf[65536], *reader;
     int stop;
     struct DNS_HEADER *dns = NULL;
@@ -28,7 +37,7 @@ int request_manager(int port)
         dns = (struct DNS_HEADER*) buf;
         //qname =(unsigned char*)&buf[sizeof(struct DNS_HEADER)];
         reader = &buf[sizeof(struct DNS_HEADER)];
-
+	
         printf("\nThe query %d contains: ", ntohs(dns->id));
         printf("\n %d Questions.", ntohs(dns->q_count));
         printf("\n %d Answers.", ntohs(dns->ans_count));
