@@ -1,33 +1,29 @@
 #include "main.h"
 
 void statistics() {
-  print_stats();
-  while(TRUE){
-    sleep(30);
-    print_stats();
-  }
+    create_pipe();
+    printf("Started statistics process\n");
 }
 
 void start_statistics() {
-  if(fork()==0){
-    printf("Stats pid = %lu",(long)getpid());
-
-    statistics();
-    exit(0);
-  }
+    if(fork()==0){
+        printf("Stats pid = %lu",(long)getpid());
+        statistics();
+        exit(0);
+    }
 }
 
 void run_config() {
-  int i;
-  printf("Started config process\n");
-  update_config("../data/config.txt");
-  printf("%d\n",config->n_threads);
-  printf("Domains:\n");
-  for(i = 0; i < MAX_N_DOMAINS; i++) {
-    printf("%d:%s\n",i,config->domains[i]);
-  }
-  printf("Local Domain: %s\n",config->local_domain);
-  printf("PipeName: %s\n",config->pipe_name);
+    int i;
+    printf("Started config process\n");
+    update_config("../data/config.txt");
+    printf("%d\n",config->n_threads);
+    printf("Domains:\n");
+    for(i = 0; i < MAX_N_DOMAINS; i++) {
+        printf("%d:%s\n",i,config->domains[i]);
+    }
+    printf("Local Domain: %s\n",config->local_domain);
+    printf("PipeName: %s\n",config->pipe_name);
 }
 
 
@@ -38,39 +34,63 @@ void create_shared_memory() {
 }
 
 void delete_shared_memory() {
-  shmctl(configshmid,IPC_RMID,NULL);
+    shmctl(configshmid,IPC_RMID,NULL);
 }
 
 void start_config() {
-  if(fork()==0){
-    printf("Config pid = %lu",(long)getpid());
-    run_config();
-    exit(0);
-  }
+    if(fork()==0){
+        printf("Config pid = %lu",(long)getpid());
+        run_config();
+        exit(0);
+    }
 }
 
 void create_semaphores() {
-  sem_unlink("CONFIG_MUTEX");
-  config_mutex = sem_open("CONFIG_MUTEX",O_CREAT|O_EXCL,0700,1);
+    sem_unlink("CONFIG_MUTEX");
+    config_mutex = sem_open("CONFIG_MUTEX",O_CREAT|O_EXCL,0700,1);
 }
 
 void send_reply(dnsrequest request, char *ip) {
     sendReply(request.dns_id, request.dns_name, inet_addr(ip), request.sockfd, request.dest);
 }
 
-void handle_remote(char dns_name[]){
-  char *command = (char *)malloc(sizeof("dig ")+ sizeof(dns_name) + 1);
-  strcpy(command,"dig ");
-  strcat(command,dns_name);
-  FILE *in;
-  char buff[512];
-  if(!(in = popen(command, "r"))){
-    terminate();
-  }
-  while(fgets(buff, sizeof(buff), in)!=NULL){
-    printf("|%s|",buff);
-  }
-  close(in);
+void handle_remote(dnsrequest request){
+    int i;
+    char *command = (char *)malloc(sizeof("dig ")+ sizeof(request.dns_name) + 1);
+    char *line;
+    char *ip = (char*)malloc(IP_SIZE);
+    strcpy(command,"dig ");
+    strcat(command,request.dns_name);
+    FILE *in;
+    char buff[512];
+    char buff2[512];
+    char buff3[512];
+
+    if(!(in = popen(command, "r"))){
+        terminate();
+    }
+
+    fgets(buff2, sizeof(buff2), in);
+    fgets(buff, sizeof(buff), in);
+    fgets(buff3, sizeof(buff3), in);
+    while(strcmp(buff3, ";; AUTHORITY SECTION:\n") != 0) {
+        strcpy(buff, buff2);
+        strcpy(buff2, buff3);
+        fgets(buff3, sizeof(buff3), in);
+    }
+
+    i = strlen(buff);
+    while (buff[i] != '\t') { i--; }
+
+    if (strlen(buff) - i < 5) {
+        send_reply(request, "0.0.0.0");
+        return;
+    } else {
+        strncpy(ip, buff + i + 1, strlen(buff) - i);
+        ip[strlen(ip)-1] = '\0';
+        close(in);
+        send_reply(request, ip);
+    }
 }
 
 void *thread_behaviour(void *args) {
@@ -88,7 +108,7 @@ void *thread_behaviour(void *args) {
                 printf("ola\n");
                 send_reply(aux_request, "0.0.0.0");
             } else {;
-		handle_remote(aux_request.dns_name);
+                handle_remote(aux_request);
             }
         } else {
             if ((request_ip = find_local_mmaped_file(request.dns_name)) != NULL) {
@@ -100,8 +120,8 @@ void *thread_behaviour(void *args) {
         printf("Thread sleeping");
         pthread_mutex_unlock(&mutex_thread);
     }
-  pthread_exit(NULL);
-  return NULL;
+    pthread_exit(NULL);
+    return NULL;
 
 }
 
@@ -111,13 +131,13 @@ void create_threads() {
     pthread_mutex_init(&mutex_thread,NULL);
     pthread_cond_init(&cond_thread,NULL);
     for (i = 0; i < config->n_threads; i++) {
-      pthread_create(&thread_pool[i], NULL, thread_behaviour, (void*)((long)i));
+        pthread_create(&thread_pool[i], NULL, thread_behaviour, (void*)((long)i));
     }
 }
 
 void delete_semaphores() {
-  sem_close(config_mutex);
-  sem_unlink("CONFIG_MUTEX");
+    sem_close(config_mutex);
+    sem_unlink("CONFIG_MUTEX");
 }
 
 void sigint_handler() {
@@ -130,7 +150,7 @@ void sigint_handler() {
 
 
 void create_socket(int port){
-  
+
     struct sockaddr_in servaddr;
     // Get server UDP port number
     if(port <= 0) {
@@ -152,13 +172,13 @@ void create_socket(int port){
     servaddr.sin_family = AF_INET;
     servaddr.sin_addr.s_addr=htonl(INADDR_ANY);
     servaddr.sin_port=htons(port);
-    
+
     // Bind application to UDP port
     int res = bind(sockfd,(struct sockaddr *)&servaddr,sizeof(servaddr));
 
     // Failure on association of application to UDP port
     if(res < 0) {
-      printf("Error binding to port %d.\n", servaddr.sin_port);
+        printf("Error binding to port %d.\n", servaddr.sin_port);
 
         if(servaddr.sin_port <= 1024) {
             printf("To use ports below 1024 you may need additional permitions. Try to use a port higher than 1024.\n");
@@ -166,17 +186,17 @@ void create_socket(int port){
             printf("Please make sure this UDP port is not being used.\n");
         }
         exit(1);
-   } 
+    } 
 }
 
 void create_pipe(){
-  unlink(config->pipe_name);
-  sem_wait(config_mutex);
-  if(mkfifo(config->pipe_name,O_CREAT|O_EXCL|0600)<0){
-    perror("Cannot create pipe: ");
-    exit(0);
-  }
-  sem_post(config_mutex);
+    unlink(config->pipe_name);
+    sem_wait(config_mutex);
+    if(mkfifo(config->pipe_name,O_CREAT|O_EXCL|0600)<0){
+        perror("Cannot create pipe: ");
+        exit(0);
+    }
+    sem_post(config_mutex);
 }
 
 /* Initializes semaphores shared mem config statistics and threads */
@@ -206,15 +226,15 @@ void terminate() {
 }
 
 int main(int argc, char const *argv[]) {
-  if(argc <= 1) {
-    printf("Usage: dnsserver <port>\n");
-    exit(1);
-  }
-  signal(SIGINT, sigint_handler);
-  init(atoi(argv[1]));
-  request_manager();
-  terminate();
-  return 0;
+    if(argc <= 1) {
+        printf("Usage: dnsserver <port>\n");
+        exit(1);
+    }
+    signal(SIGINT, sigint_handler);
+    init(atoi(argv[1]));
+    request_manager();
+    terminate();
+    return 0;
 }
 
 
