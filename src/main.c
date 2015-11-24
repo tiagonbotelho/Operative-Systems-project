@@ -62,7 +62,6 @@ void handle_remote(dnsrequest request) {
     strcat(command,request.dns_name);
     FILE *in;
     char buff[512];
-    char buff2[512];
 
     if(!(in = popen(command, "r"))){
         terminate();
