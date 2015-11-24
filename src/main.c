@@ -78,31 +78,6 @@ void handle_remote(dnsrequest request) {
     }
 
     send_reply(request, "0.0.0.0");
-
-
-
-    //char buff2[512];
-    //char buff3[512];
-    //fgets(buff2, sizeof(buff2), in);
-    //fgets(buff3, sizeof(buff3), in);
-    /*while(strcmp(buff3, ";; AUTHORITY SECTION:\n") != 0) {
-        strcpy(buff, buff2);
-        strcpy(buff2, buff3);
-        fgets(buff3, sizeof(buff3), in);
-    }*/
-
-    //i = strlen(buff);
-    //while (buff[i] != '\t') { i--; }
-
-    /*if (strlen(buff) - i < 5) {
-        send_reply(request, "0.0.0.0");
-        return;
-    } else {
-        strncpy(ip, buff + i + 1, strlen(buff) - i);
-        ip[strlen(ip)-1] = '\0';
-        close(in);
-        send_reply(request, ip);
-    }*/
 }
 
 void *thread_behaviour(void *args) {
