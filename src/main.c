@@ -54,35 +54,47 @@ void send_reply(dnsrequest request, char *ip) {
     sendReply(request.dns_id, request.dns_name, inet_addr(ip), request.sockfd, request.dest);
 }
 
-void handle_remote(dnsrequest request){
-    int i;
-    char *command = (char *)malloc(sizeof("dig ")+ sizeof(request.dns_name) + 1);
+void handle_remote(dnsrequest request) {
+    char *command = (char *)malloc(sizeof("dig +short ")+ sizeof(request.dns_name) + 1);
     char *line;
     char *ip = (char*)malloc(IP_SIZE);
-    strcpy(command,"dig ");
+    strcpy(command,"dig +short ");
     strcat(command,request.dns_name);
     FILE *in;
     char buff[512];
     char buff2[512];
-    char buff3[512];
 
     if(!(in = popen(command, "r"))){
         terminate();
     }
 
-    fgets(buff2, sizeof(buff2), in);
-    fgets(buff, sizeof(buff), in);
-    fgets(buff3, sizeof(buff3), in);
-    while(strcmp(buff3, ";; AUTHORITY SECTION:\n") != 0) {
+    while (fgets(buff, sizeof(buff), in) != 0 ) {
+        if (isdigit(buff[0])) {
+            strncpy(ip, buff, strlen(buff));
+            ip[strlen(ip)-1] = '\0';
+            send_reply(request, ip);
+            return;
+        }
+    }
+
+    send_reply(request, "0.0.0.0");
+
+
+
+    //char buff2[512];
+    //char buff3[512];
+    //fgets(buff2, sizeof(buff2), in);
+    //fgets(buff3, sizeof(buff3), in);
+    /*while(strcmp(buff3, ";; AUTHORITY SECTION:\n") != 0) {
         strcpy(buff, buff2);
         strcpy(buff2, buff3);
         fgets(buff3, sizeof(buff3), in);
-    }
+    }*/
 
-    i = strlen(buff);
-    while (buff[i] != '\t') { i--; }
+    //i = strlen(buff);
+    //while (buff[i] != '\t') { i--; }
 
-    if (strlen(buff) - i < 5) {
+    /*if (strlen(buff) - i < 5) {
         send_reply(request, "0.0.0.0");
         return;
     } else {
@@ -90,7 +102,7 @@ void handle_remote(dnsrequest request){
         ip[strlen(ip)-1] = '\0';
         close(in);
         send_reply(request, ip);
-    }
+    }*/
 }
 
 void *thread_behaviour(void *args) {

@@ -3,7 +3,7 @@
 int request_manager(int port) 
 {
     printf("Started request manager process\n");
-    stats_struct stats = initialize_stats();
+    /*stats_struct stats = initialize_stats();
     char *pipe_name = (char *)malloc(MAX_PIPE_NAME);
     sem_wait(config_mutex);
     strcpy(pipe_name,config->pipe_name);
@@ -11,7 +11,7 @@ int request_manager(int port)
     int fd = open(pipe_name, O_WRONLY);;
     printf("heheh\n");
     write(fd,&stats,sizeof(stats_struct));
-    printf("Wrote %s\n",pipe_name);
+    printf("Wrote %s\n",pipe_name); */
     unsigned char buf[65536], *reader;
     int stop;
     struct DNS_HEADER *dns = NULL;
