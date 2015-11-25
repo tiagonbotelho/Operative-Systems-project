@@ -1,13 +1,9 @@
 #include"main.h"
 
-<<<<<<< HEAD
-void schedule_request(int queue,short dns_id, int sockfd, unsigned char *dns_name, struct sockaddr_in dest){
-=======
 dnsrequest pop(dns_queue **top) {
     dnsrequest item;
     dns_queue *tmp;
 
-    printf("###%s\n", (*top)->request.dns_name);
     item = (*top)->request;
     tmp = *top;
     *top = (*top)->next_node;
@@ -21,7 +17,6 @@ void push(dnsrequest item, dns_queue **top) {
     tmp->request = item;
     tmp->next_node = *top;
     *top = tmp;
-    printf("###%s\n", (*top)->request.dns_name);
 }
 
 int stack_empty(dns_queue *tmp) {
@@ -33,7 +28,6 @@ int stack_empty(dns_queue *tmp) {
 }
 
 void schedule_request(int queue,short dns_id, int sockfd, char *dns_name, struct sockaddr_in dest){
->>>>>>> 619d6cbfc8908526555e0c7ea8905a18d522ac74
   dnsrequest request;
   memcpy(&request.dest,&dest,sizeof(struct sockaddr_in));
   memcpy(&request.dns_name,dns_name,sizeof(char)*IP_SIZE);

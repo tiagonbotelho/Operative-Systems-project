@@ -49,21 +49,12 @@ void send_reply(dnsrequest request, char *ip) {
     sendReply(request.dns_id, request.dns_name, inet_addr(ip), request.sockfd, request.dest);
 }
 
-<<<<<<< HEAD
-void handle_remote(dnsrequest request){
-    int i;
-    char *command = (char *)malloc(sizeof("dig ")+ sizeof(request.dns_name) + 1);
-    char *ip = (char*)malloc(IP_SIZE);
-    strcpy(command,"dig ");
-    strcat(command,(char *)request.dns_name);
-=======
 void handle_remote(dnsrequest request) {
     char *command = (char *)malloc(sizeof("dig +short ")+ sizeof(request.dns_name) + 1);
     char *line;
     char *ip = (char*)malloc(IP_SIZE);
     strcpy(command,"dig +short ");
     strcat(command,request.dns_name);
->>>>>>> 619d6cbfc8908526555e0c7ea8905a18d522ac74
     FILE *in;
     char buff[512];
 
@@ -79,23 +70,7 @@ void handle_remote(dnsrequest request) {
             return;
         }
     }
-
-<<<<<<< HEAD
-    i = strlen(buff);
-    while (buff[i] != '\t') { i--; }
-    fclose(in);
-    
-    if (strlen(buff) - i < 5) {
-        send_reply(request, "0.0.0.0");
-        return;
-    } else {
-        strncpy(ip, buff + i + 1, strlen(buff) - i);
-        ip[strlen(ip)-1] = '\0';
-        send_reply(request, ip);
-    }
-=======
     send_reply(request, "0.0.0.0");
->>>>>>> 619d6cbfc8908526555e0c7ea8905a18d522ac74
 }
 
 void *thread_behaviour(void *args) {
@@ -215,8 +190,11 @@ void init(int port) {
     mem_mapped_file_init("../data/localdns.txt");
     requests_queue = msgget(IPC_PRIVATE, IPC_CREAT|0700);
     create_socket(port);
-<<<<<<< HEAD
     send_start_time_to_pipe();
+    queue_local = (dns_queue*)malloc(sizeof(dns_queue));
+    queue_remote = (dns_queue*)malloc(sizeof(dns_queue));
+    queue_local = NULL;
+    queue_remote = NULL;
 }
 
 void send_start_time_to_pipe(){
@@ -230,12 +208,6 @@ void send_start_time_to_pipe(){
     struct tm start_time = *localtime ( &rawtime );
     write(fd,&start_time,sizeof(struct tm));
     close(fd);
-=======
-    queue_local = (dns_queue*)malloc(sizeof(dns_queue));
-    queue_remote = (dns_queue*)malloc(sizeof(dns_queue));
-    queue_local = NULL;
-    queue_remote = NULL;
->>>>>>> 619d6cbfc8908526555e0c7ea8905a18d522ac74
 }
 
 /* Terminate processes shared_memory and semaphores */
