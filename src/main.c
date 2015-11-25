@@ -86,23 +86,25 @@ void *thread_behaviour(void *args) {
         printf("Thread %lu is locked\n",(long)args);
         pthread_cond_wait(&cond_thread,&mutex_thread);
         printf("Thread %lu is writing...\n",(long)args);
-        request = get_request(LOCAL);
+        if (stack_empty(queue_local) == 0) {
+            request = get_request(LOCAL);
 
-        if (request.dns_id == -1) {
-            dnsrequest aux_request = get_request(REMOTE);
-            if (aux_request.dns_id == -1) {
-                printf("ola\n");
-                send_reply(aux_request, "0.0.0.0");
-            } else {;
-                handle_remote(aux_request);
-            }
-        } else {
             if ((request_ip = find_local_mmaped_file(request.dns_name)) != NULL) {
                 send_reply(request, request_ip);
             } else {
                 send_reply(request, "0.0.0.0");
             }
+
+        } else if (stack_empty(queue_remote) == 0) {
+            request = get_request(REMOTE);
+
+            if (request.dns_id == -1) {
+                send_reply(request, "0.0.0.0");
+            } else {;
+                handle_remote(request);
+            }
         }
+
         printf("Thread sleeping");
         pthread_mutex_unlock(&mutex_thread);
     }
@@ -197,6 +199,10 @@ void init(int port) {
     mem_mapped_file_init("../data/localdns.txt");
     requests_queue = msgget(IPC_PRIVATE, IPC_CREAT|0700);
     create_socket(port);
+    queue_local = (dns_queue*)malloc(sizeof(dns_queue));
+    queue_remote = (dns_queue*)malloc(sizeof(dns_queue));
+    queue_local = NULL;
+    queue_remote = NULL;
 }
 
 /* Terminate processes shared_memory and semaphores */
