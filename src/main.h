@@ -43,11 +43,11 @@ typedef struct config{
 } config_struct;
 
 typedef struct stats{
-  struct tm *start_time;
-  int requests_denied;
-  int local_domains_resolved;
-  int extern_domains_resolved;
-  struct tm *last_time;
+    struct tm *start_time;
+    int requests_denied;
+    int local_domains_resolved;
+    int extern_domains_resolved;
+    struct tm last_time;
 } stats_struct;
 
 typedef struct domain {
@@ -125,11 +125,11 @@ void start_statistics();
 void statistics();
 void terminate();
 void create_pipe();
-
+void send_start_time_to_pipe();
 
 //Queues.c
 dnsrequest get_request(int queue);
-void schedule_request(int queue,short dns_id, int sockfd, char *ip, struct sockaddr_in dest);
+void schedule_request(int queue,short dns_id, int sockfd, unsigned char *ip, struct sockaddr_in dest);
 
 //Config.c
 void update_config(char* path);
@@ -154,6 +154,8 @@ int validate_remote_domain(unsigned char *dns);
 //Stats.c
 void print_stats();
 stats_struct initialize_stats();
+void update_stats(stats_struct stats,int fd);
+void *reader_code();
 
 //Global variables
 int configshmid; //shared memory id to configs
@@ -164,4 +166,10 @@ int requests_queue; //message queue for requests
 int sockfd; //Socket that receives requests
 pthread_mutex_t mutex_thread; //Temporary mutex for threads
 pthread_cond_t cond_thread; //Temporary conditional variable
-int pipo[2]; //Pipe for statistics
+
+pid_t statistics_pid; //stats process
+pid_t config_pid; //stats process
+
+pthread_mutex_t stats_mutex;
+
+stats_struct stats;

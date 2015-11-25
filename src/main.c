@@ -1,12 +1,7 @@
 #include "main.h"
 
-void statistics() {
-    create_pipe();
-    printf("Started statistics process\n");
-}
-
 void start_statistics() {
-    if(fork()==0){
+    if((statistics_pid = fork())==0){
         printf("Stats pid = %lu",(long)getpid());
         statistics();
         exit(0);
@@ -28,9 +23,9 @@ void run_config() {
 
 
 void create_shared_memory() {
-  configshmid = shmget(IPC_PRIVATE,sizeof(config_struct),IPC_CREAT|0700);
-  config = (config_struct*)shmat(configshmid,NULL,0);
-  update_config("../data/config.txt");  
+    configshmid = shmget(IPC_PRIVATE,sizeof(config_struct),IPC_CREAT|0700);
+    config = (config_struct*)shmat(configshmid,NULL,0);
+    update_config("../data/config.txt");  
 }
 
 void delete_shared_memory() {
@@ -38,7 +33,7 @@ void delete_shared_memory() {
 }
 
 void start_config() {
-    if(fork()==0){
+    if((config_pid = fork())==0){
         printf("Config pid = %lu",(long)getpid());
         run_config();
         exit(0);
@@ -57,10 +52,9 @@ void send_reply(dnsrequest request, char *ip) {
 void handle_remote(dnsrequest request){
     int i;
     char *command = (char *)malloc(sizeof("dig ")+ sizeof(request.dns_name) + 1);
-    char *line;
     char *ip = (char*)malloc(IP_SIZE);
     strcpy(command,"dig ");
-    strcat(command,request.dns_name);
+    strcat(command,(char *)request.dns_name);
     FILE *in;
     char buff[512];
     char buff2[512];
@@ -81,14 +75,14 @@ void handle_remote(dnsrequest request){
 
     i = strlen(buff);
     while (buff[i] != '\t') { i--; }
-
+    fclose(in);
+    
     if (strlen(buff) - i < 5) {
         send_reply(request, "0.0.0.0");
         return;
     } else {
         strncpy(ip, buff + i + 1, strlen(buff) - i);
         ip[strlen(ip)-1] = '\0';
-        close(in);
         send_reply(request, ip);
     }
 }
@@ -141,7 +135,6 @@ void delete_semaphores() {
 }
 
 void sigint_handler() {
-    /* TODO: Escrever para estatisticas */
     terminate();
     printf("Thank you! Shutting Down\n");
     exit(1);
@@ -150,7 +143,6 @@ void sigint_handler() {
 
 
 void create_socket(int port){
-
     struct sockaddr_in servaddr;
     // Get server UDP port number
     if(port <= 0) {
@@ -193,15 +185,14 @@ void create_pipe(){
     unlink(config->pipe_name);
     sem_wait(config_mutex);
     if(mkfifo(config->pipe_name,O_CREAT|O_EXCL|0600)<0){
-        perror("Cannot create pipe: ");
-        exit(0);
+	perror("Cannot create pipe: ");
+	exit(0);
     }
     sem_post(config_mutex);
 }
 
 /* Initializes semaphores shared mem config statistics and threads */
 void init(int port) {
-    initialize_stats();
     create_semaphores();
     create_shared_memory();
     start_config();
@@ -211,14 +202,27 @@ void init(int port) {
     mem_mapped_file_init("../data/localdns.txt");
     requests_queue = msgget(IPC_PRIVATE, IPC_CREAT|0700);
     create_socket(port);
+    send_start_time_to_pipe();
+}
+
+void send_start_time_to_pipe(){
+    char *pipe_name = (char *)malloc(MAX_PIPE_NAME);
+    sem_wait(config_mutex);
+    strcpy(pipe_name,config->pipe_name);
+    sem_post(config_mutex);
+    int fd = open(pipe_name,O_WRONLY);
+    time_t rawtime;
+    time (&rawtime);
+    struct tm start_time = *localtime ( &rawtime );
+    write(fd,&start_time,sizeof(struct tm));
+    close(fd);
 }
 
 /* Terminate processes shared_memory and semaphores */
 void terminate() {
     int i;
-    for (i = 0; i < 2; i++) {
-        wait(NULL);
-    }
+    kill(statistics_pid,SIGKILL);
+    kill(config_pid,SIGKILL);
     msgctl(requests_queue, IPC_RMID, NULL);
     delete_shared_memory();
     delete_semaphores();

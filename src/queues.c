@@ -1,6 +1,6 @@
 #include"main.h"
 
-void schedule_request(int queue,short dns_id, int sockfd, char *dns_name, struct sockaddr_in dest){
+void schedule_request(int queue,short dns_id, int sockfd, unsigned char *dns_name, struct sockaddr_in dest){
   dnsrequest request;
   request.mtype = queue;
   memcpy(&request.dest,&dest,sizeof(struct sockaddr_in));

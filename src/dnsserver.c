@@ -3,25 +3,19 @@
 int request_manager(int port) 
 {
     printf("Started request manager process\n");
-    stats_struct stats = initialize_stats();
-    char *pipe_name = (char *)malloc(MAX_PIPE_NAME);
-    sem_wait(config_mutex);
-    strcpy(pipe_name,config->pipe_name);
-    sem_post(config_mutex);  
-    int fd = open(pipe_name, O_WRONLY);;
-    printf("heheh\n");
-    write(fd,&stats,sizeof(stats_struct));
-    printf("Wrote %s\n",pipe_name);
     unsigned char buf[65536], *reader;
     int stop;
     struct DNS_HEADER *dns = NULL;
     struct sockaddr_in dest;
     socklen_t len;
-
     // ****************************************
     // Receive questions
     // ****************************************
-
+    char *pipe_name = (char *)malloc(MAX_PIPE_NAME);
+    sem_wait(config_mutex);
+    strcpy(pipe_name,config->pipe_name);
+    sem_post(config_mutex);
+    int fd = open(pipe_name, O_WRONLY);
     while(1) {
         // Receive questions
         len = sizeof(dest);
@@ -30,7 +24,7 @@ int request_manager(int port)
             printf("Error while waiting for DNS message. Exiting...\n");
             exit(1);
         }
-
+	
         printf("DNS message received\n");
 
         // Process received message
@@ -78,26 +72,33 @@ int request_manager(int port)
         printf(">> QUERY: %s\n", query.name);
         printf(">> Type (A): %d\n", ntohs(query.ques->qtype));
         printf(">> Class (IN): %d\n\n", ntohs(query.ques->qclass));
-
+	
         // ****************************************
         // Example reply to the received QUERY
         // (Currently replying 10.0.0.2 to all QUERY names)
         // ****************************************
+	char aux;
 	if(validate_local_domain(query.name)){
-	  printf("Pedido local\n");
-	  schedule_request(LOCAL,dns->id,sockfd,query.name,dest);
-	  pthread_cond_signal(&cond_thread);
+	    printf("Pedido local\n");
+	    schedule_request(LOCAL,dns->id,sockfd,query.name,dest);
+	    aux = 'l';
+	    write(fd,&aux,sizeof(char));
+	    pthread_cond_signal(&cond_thread);
 	} else if(validate_remote_domain(query.name)){
-	  printf("Pedido remoto\n");
-	  schedule_request(REMOTE,dns->id,sockfd,query.name,dest);
-	  pthread_cond_signal(&cond_thread);
+	    printf("Pedido remoto\n");
+	    schedule_request(REMOTE,dns->id,sockfd,query.name,dest);
+	    aux = 'e';
+	    write(fd,&aux,sizeof(char));
+	    pthread_cond_signal(&cond_thread);
 	} else {
-	  printf("Neither\n");
-	  schedule_request(REMOTE,dns->id,sockfd,query.name,dest);
-	  pthread_cond_signal(&cond_thread);
+	    printf("Neither\n");
+	    schedule_request(REMOTE,dns->id,sockfd,query.name,dest);
+	    aux = 'd';
+	    write(fd,&aux,sizeof(char));
+	    pthread_cond_signal(&cond_thread);
 	}
     }
-
+    
     return 0;
 }
 
@@ -234,8 +235,8 @@ int get_size(char *dns) {
 }
 
 int compare_domains(unsigned char *to_compare, unsigned char *comparable) {
-    int size = strlen(to_compare);
-    int size_comp = strlen(comparable);
+  int size = strlen((char *)to_compare);
+  int size_comp = strlen((char *)comparable);
     int i;
     
     for (i = 1; i <= size_comp; i++) {
@@ -248,14 +249,14 @@ int compare_domains(unsigned char *to_compare, unsigned char *comparable) {
 }
 
 int validate_local_domain(unsigned char *dns) {
-    return compare_domains(dns, config->local_domain);
+  return compare_domains(dns, (unsigned char*)config->local_domain);
 }
 
 int validate_remote_domain(unsigned char *dns) {
     int i = 0; 
 
     while (config->domains[i][0] != '\0' && i < MAX_N_DOMAINS) {
-        if (compare_domains(dns, config->domains[i]) == TRUE) {
+      if (compare_domains(dns, (unsigned char* )config->domains[i]) == TRUE) {
             return TRUE;
         }
         i++;
