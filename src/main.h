@@ -111,12 +111,16 @@ struct QUERY
 };
 
 typedef struct request {
-  long mtype;
   unsigned char dns_name[IP_SIZE];
   short dns_id;
   int sockfd;
   struct sockaddr_in dest;
 } dnsrequest;
+
+typedef struct dnsqueue {
+    dnsrequest request;
+    struct dnsqueue *next_node;
+} dns_queue;
 
 //Main.c
 void start_config();
@@ -129,7 +133,16 @@ void send_start_time_to_pipe();
 
 //Queues.c
 dnsrequest get_request(int queue);
+<<<<<<< HEAD
 void schedule_request(int queue,short dns_id, int sockfd, unsigned char *ip, struct sockaddr_in dest);
+=======
+void schedule_request(int queue,short dns_id, int sockfd, char *ip, struct sockaddr_in dest);
+dns_queue *get_node(dnsrequest item);
+int stack_empty(dns_queue *tmp);
+dnsrequest pop(dns_queue **top);
+void push(dnsrequest item, dns_queue **top);
+
+>>>>>>> 619d6cbfc8908526555e0c7ea8905a18d522ac74
 
 //Config.c
 void update_config(char* path);
@@ -166,6 +179,7 @@ int requests_queue; //message queue for requests
 int sockfd; //Socket that receives requests
 pthread_mutex_t mutex_thread; //Temporary mutex for threads
 pthread_cond_t cond_thread; //Temporary conditional variable
+<<<<<<< HEAD
 
 pid_t statistics_pid; //stats process
 pid_t config_pid; //stats process
@@ -173,3 +187,7 @@ pid_t config_pid; //stats process
 pthread_mutex_t stats_mutex;
 
 stats_struct stats;
+=======
+dns_queue *queue_local; // Queue of local requests
+dns_queue *queue_remote; // Queue of remote requests
+>>>>>>> 619d6cbfc8908526555e0c7ea8905a18d522ac74

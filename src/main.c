@@ -49,30 +49,38 @@ void send_reply(dnsrequest request, char *ip) {
     sendReply(request.dns_id, request.dns_name, inet_addr(ip), request.sockfd, request.dest);
 }
 
+<<<<<<< HEAD
 void handle_remote(dnsrequest request){
     int i;
     char *command = (char *)malloc(sizeof("dig ")+ sizeof(request.dns_name) + 1);
     char *ip = (char*)malloc(IP_SIZE);
     strcpy(command,"dig ");
     strcat(command,(char *)request.dns_name);
+=======
+void handle_remote(dnsrequest request) {
+    char *command = (char *)malloc(sizeof("dig +short ")+ sizeof(request.dns_name) + 1);
+    char *line;
+    char *ip = (char*)malloc(IP_SIZE);
+    strcpy(command,"dig +short ");
+    strcat(command,request.dns_name);
+>>>>>>> 619d6cbfc8908526555e0c7ea8905a18d522ac74
     FILE *in;
     char buff[512];
-    char buff2[512];
-    char buff3[512];
 
     if(!(in = popen(command, "r"))){
         terminate();
     }
 
-    fgets(buff2, sizeof(buff2), in);
-    fgets(buff, sizeof(buff), in);
-    fgets(buff3, sizeof(buff3), in);
-    while(strcmp(buff3, ";; AUTHORITY SECTION:\n") != 0) {
-        strcpy(buff, buff2);
-        strcpy(buff2, buff3);
-        fgets(buff3, sizeof(buff3), in);
+    while (fgets(buff, sizeof(buff), in) != 0 ) {
+        if (isdigit(buff[0])) {
+            strncpy(ip, buff, strlen(buff));
+            ip[strlen(ip)-1] = '\0';
+            send_reply(request, ip);
+            return;
+        }
     }
 
+<<<<<<< HEAD
     i = strlen(buff);
     while (buff[i] != '\t') { i--; }
     fclose(in);
@@ -85,6 +93,9 @@ void handle_remote(dnsrequest request){
         ip[strlen(ip)-1] = '\0';
         send_reply(request, ip);
     }
+=======
+    send_reply(request, "0.0.0.0");
+>>>>>>> 619d6cbfc8908526555e0c7ea8905a18d522ac74
 }
 
 void *thread_behaviour(void *args) {
@@ -94,23 +105,25 @@ void *thread_behaviour(void *args) {
         printf("Thread %lu is locked\n",(long)args);
         pthread_cond_wait(&cond_thread,&mutex_thread);
         printf("Thread %lu is writing...\n",(long)args);
-        request = get_request(LOCAL);
+        if (stack_empty(queue_local) == 0) {
+            request = get_request(LOCAL);
 
-        if (request.dns_id == -1) {
-            dnsrequest aux_request = get_request(REMOTE);
-            if (aux_request.dns_id == -1) {
-                printf("ola\n");
-                send_reply(aux_request, "0.0.0.0");
-            } else {;
-                handle_remote(aux_request);
-            }
-        } else {
             if ((request_ip = find_local_mmaped_file(request.dns_name)) != NULL) {
                 send_reply(request, request_ip);
             } else {
                 send_reply(request, "0.0.0.0");
             }
+
+        } else if (stack_empty(queue_remote) == 0) {
+            request = get_request(REMOTE);
+
+            if (request.dns_id == -1) {
+                send_reply(request, "0.0.0.0");
+            } else {;
+                handle_remote(request);
+            }
         }
+
         printf("Thread sleeping");
         pthread_mutex_unlock(&mutex_thread);
     }
@@ -202,6 +215,7 @@ void init(int port) {
     mem_mapped_file_init("../data/localdns.txt");
     requests_queue = msgget(IPC_PRIVATE, IPC_CREAT|0700);
     create_socket(port);
+<<<<<<< HEAD
     send_start_time_to_pipe();
 }
 
@@ -216,6 +230,12 @@ void send_start_time_to_pipe(){
     struct tm start_time = *localtime ( &rawtime );
     write(fd,&start_time,sizeof(struct tm));
     close(fd);
+=======
+    queue_local = (dns_queue*)malloc(sizeof(dns_queue));
+    queue_remote = (dns_queue*)malloc(sizeof(dns_queue));
+    queue_local = NULL;
+    queue_remote = NULL;
+>>>>>>> 619d6cbfc8908526555e0c7ea8905a18d522ac74
 }
 
 /* Terminate processes shared_memory and semaphores */

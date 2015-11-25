@@ -1,21 +1,58 @@
 #include"main.h"
 
+<<<<<<< HEAD
 void schedule_request(int queue,short dns_id, int sockfd, unsigned char *dns_name, struct sockaddr_in dest){
+=======
+dnsrequest pop(dns_queue **top) {
+    dnsrequest item;
+    dns_queue *tmp;
+
+    printf("###%s\n", (*top)->request.dns_name);
+    item = (*top)->request;
+    tmp = *top;
+    *top = (*top)->next_node;
+    free(tmp);
+    return item;
+}
+
+void push(dnsrequest item, dns_queue **top) {
+    dns_queue *tmp;
+    tmp = (dns_queue*)malloc(sizeof(dns_queue));
+    tmp->request = item;
+    tmp->next_node = *top;
+    *top = tmp;
+    printf("###%s\n", (*top)->request.dns_name);
+}
+
+int stack_empty(dns_queue *tmp) {
+    if (tmp == NULL) {
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
+void schedule_request(int queue,short dns_id, int sockfd, char *dns_name, struct sockaddr_in dest){
+>>>>>>> 619d6cbfc8908526555e0c7ea8905a18d522ac74
   dnsrequest request;
-  request.mtype = queue;
   memcpy(&request.dest,&dest,sizeof(struct sockaddr_in));
   memcpy(&request.dns_name,dns_name,sizeof(char)*IP_SIZE);
   request.dns_id = dns_id;
   request.sockfd = sockfd;
-  msgsnd(requests_queue,&request,sizeof(dnsrequest)-sizeof(long),0);
+
+  if (queue == LOCAL) {
+      push(request, &queue_local);
+  } else {
+      push(request, &queue_remote);
+  }
 }
 
 dnsrequest get_request(int queue){
-  dnsrequest request;
 
-  if (msgrcv(requests_queue,&request,sizeof(dnsrequest)-sizeof(long),queue,IPC_NOWAIT) == -1) {
-    request.dns_id = -1;
+  if (queue == LOCAL) {
+      return pop(&queue_local);
   }
-  return request;
+
+  return pop(&queue_remote);
 }
 
