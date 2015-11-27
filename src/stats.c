@@ -10,7 +10,7 @@ stats_struct initialize_stats(){
 
 void print_stats(){
     pthread_mutex_lock(&stats_mutex);
-    char * time;
+    char * time = NULL;
     asctime_r(&stats.last_time,time);
     int sum = stats.requests_denied + stats.extern_domains_resolved + stats.local_domains_resolved;
     printf("Server start time: %sLocal domains resolved: %d\nExtern domains resolved:%d\nRequests refused: %d\nTotal requests received: %d\nLast information received: %s\n",asctime(stats.start_time),stats.local_domains_resolved,stats.extern_domains_resolved,stats.requests_denied,sum,time);

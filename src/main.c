@@ -46,7 +46,7 @@ void create_semaphores() {
 }
 
 void send_reply(dnsrequest request, char *ip) {
-    sendReply(request.dns_id, request.dns_name, inet_addr(ip), request.sockfd, request.dest);
+    sendReply(request.dns_id, (unsigned char*)request.dns_name, inet_addr(ip), request.sockfd, request.dest);
 }
 
 void handle_remote(dnsrequest request) {
@@ -57,11 +57,9 @@ void handle_remote(dnsrequest request) {
     strcat(command,request.dns_name);
     FILE *in;
     char buff[512];
-
     if(!(in = popen(command, "r"))){
         terminate();
     }
-
     while (fgets(buff, sizeof(buff), in) != 0 ) {
         if (isdigit(buff[0])) {
             strncpy(ip, buff, strlen(buff));
@@ -170,8 +168,8 @@ void create_socket(int port){
 }
 
 void create_pipe(){
-    unlink(config->pipe_name);
     sem_wait(config_mutex);
+    unlink(config->pipe_name);
     if(mkfifo(config->pipe_name,O_CREAT|O_EXCL|0600)<0){
 	perror("Cannot create pipe: ");
 	exit(0);

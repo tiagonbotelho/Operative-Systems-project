@@ -7,8 +7,8 @@ domain_struct parse_line(char *line) {
     domain_struct aux; 
     
     while (line[i] != ' ') {
-      aux.dns[i] = line[i];
-      i++;
+	aux.dns[i] = line[i];
+	i++;
     }
     aux.dns[i] = '\0';
     i++;
@@ -42,16 +42,16 @@ void mem_mapped_file_init(char *path) {
     close(fd);
 }
 
-int parse_dns_line(unsigned char *line,unsigned char *dns) {
-  int i = 0;
+int parse_dns_line(char *line,char *dns) {
+    int i = 0;
 
-  while (line[i] != ' ' && dns[i] != '\0') {
-      if (line[i] != dns[i]) {
-          return -1;
-      }
-      i++;
-  }
-  return i;
+    while (line[i] != ' ' && dns[i] != '\0') {
+	if (line[i] != dns[i]) {
+	    return -1;
+	}
+	i++;
+    }
+    return i;
 }
 
 char *copy_string(char *line, int length) {
@@ -60,15 +60,15 @@ char *copy_string(char *line, int length) {
     char *string = (char*)malloc(sizeof(char) * (strlen(line) - length));
 
     for (j = length; line[j] != '\0'; j++) {
-      string[i] = line[j];
-      i++;
+	string[i] = line[j];
+	i++;
     }
     string[i] = '\0';
     return string;
 }
 
 
-char *find_local_mmaped_file(unsigned char *dns) {
+char *find_local_mmaped_file(char *dns) {
     int length;
     char *line;
     char *aux = strdup(addr);
@@ -77,7 +77,7 @@ char *find_local_mmaped_file(unsigned char *dns) {
 
     /* While there are new lines */
     while (line != NULL) {
-        if ((length = parse_dns_line((unsigned char*)line, dns)) > -1) {
+        if ((length = parse_dns_line(line, dns)) > -1) {
 
             ip = copy_string(line, (length + 1));
             return ip;

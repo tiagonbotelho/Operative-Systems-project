@@ -17,6 +17,7 @@
 #include<unistd.h>
 #include<pthread.h>
 #include<time.h>
+#include<ctype.h>
 
 //Constants
 #define MAX_N_DOMAINS 2
@@ -36,10 +37,10 @@
 
 //Structs
 typedef struct config{
-  int n_threads;
-  char domains[MAX_N_DOMAINS][MAX_DOMAIN_CHARS];
-  char local_domain[MAX_DOMAIN_CHARS];
-  char pipe_name[MAX_PIPE_NAME];
+    int n_threads;
+    char domains[MAX_N_DOMAINS][MAX_DOMAIN_CHARS];
+    char local_domain[MAX_DOMAIN_CHARS];
+    char pipe_name[MAX_PIPE_NAME];
 } config_struct;
 
 typedef struct stats{
@@ -111,10 +112,10 @@ struct QUERY
 };
 
 typedef struct request {
-  unsigned char dns_name[IP_SIZE];
-  short dns_id;
-  int sockfd;
-  struct sockaddr_in dest;
+    char dns_name[IP_SIZE];
+    short dns_id;
+    int sockfd;
+    struct sockaddr_in dest;
 } dnsrequest;
 
 typedef struct dnsqueue {
@@ -133,7 +134,7 @@ void send_start_time_to_pipe();
 
 //Queues.c
 dnsrequest get_request(int queue);
-void schedule_request(int queue,short dns_id, int sockfd, char *ip, struct sockaddr_in dest);
+void schedule_request(int queue,short dns_id, int sockfd,unsigned char *ip, struct sockaddr_in dest);
 dns_queue *get_node(dnsrequest item);
 int stack_empty(dns_queue *tmp);
 dnsrequest pop(dns_queue **top);
@@ -147,8 +148,8 @@ void update_config(char* path);
 domain_struct parse_line(char * line);
 void mem_mapped_file_init(char *path);
 void mem_mapped_file_terminate();
-char *find_local_mmaped_file(unsigned char *dns);
-int parse_dns_line(unsigned char *line, unsigned char *dns);
+char *find_local_mmaped_file(char *dns);
+int parse_dns_line(char *line,char *dns);
 
 
 //Dnsserver.c

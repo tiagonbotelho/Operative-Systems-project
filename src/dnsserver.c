@@ -103,13 +103,13 @@ int request_manager(int port)
 }
 
 /**
-sendReply: this method sends a DNS query reply to the client
- * id: DNS message id (required in the reply)
- * query: the requested query name (required in the reply)
- * ip_addr: the DNS lookup reply (the actual value to reply to the request)
- * sockfd: the socket to use for the reply
- * dest: the UDP package structure with the information of the DNS query requestor (includes it's IP and port to send the reply)
- **/
+   sendReply: this method sends a DNS query reply to the client
+   * id: DNS message id (required in the reply)
+   * query: the requested query name (required in the reply)
+   * ip_addr: the DNS lookup reply (the actual value to reply to the request)
+   * sockfd: the socket to use for the reply
+   * dest: the UDP package structure with the information of the DNS query requestor (includes it's IP and port to send the reply)
+   **/
 void sendReply(unsigned short id, unsigned char* query, int ip_addr, int sockfd, struct sockaddr_in dest) {
     unsigned char bufReply[65536], *rname;
     char *rip;
@@ -159,8 +159,8 @@ void sendReply(unsigned short id, unsigned char* query, int ip_addr, int sockfd,
 }
 
 /**
-convertRFC2Name: converts DNS RFC name to name
- **/
+   convertRFC2Name: converts DNS RFC name to name
+**/
 u_char* convertRFC2Name(unsigned char* reader,unsigned char* buffer,int* count) {
     unsigned char *name;
     unsigned int p=0,jumped=0,offset;
@@ -172,7 +172,7 @@ u_char* convertRFC2Name(unsigned char* reader,unsigned char* buffer,int* count) 
     name[0]='\0';
 
     while(*reader!=0) {
-      if(*reader>=192) {
+	if(*reader>=192) {
             offset = (*reader)*256 + *(reader+1) - 49152;
             reader = buffer + offset - 1;
             jumped = 1;
@@ -205,8 +205,8 @@ u_char* convertRFC2Name(unsigned char* reader,unsigned char* buffer,int* count) 
 }
 
 /**
-convertName2RFC: converts name to DNS RFC name
- **/
+   convertName2RFC: converts name to DNS RFC name
+**/
 void convertName2RFC(unsigned char* dns,unsigned char* host) {
     int lock = 0 , i;
     strcat((char*)host,".");
@@ -235,8 +235,8 @@ int get_size(char *dns) {
 }
 
 int compare_domains(unsigned char *to_compare, unsigned char *comparable) {
-  int size = strlen((char *)to_compare);
-  int size_comp = strlen((char *)comparable);
+    int size = strlen((char *)to_compare);
+    int size_comp = strlen((char *)comparable);
     int i;
     
     for (i = 1; i <= size_comp; i++) {
@@ -249,14 +249,14 @@ int compare_domains(unsigned char *to_compare, unsigned char *comparable) {
 }
 
 int validate_local_domain(unsigned char *dns) {
-  return compare_domains(dns, (unsigned char*)config->local_domain);
+    return compare_domains(dns, (unsigned char*)config->local_domain);
 }
 
 int validate_remote_domain(unsigned char *dns) {
     int i = 0; 
 
     while (config->domains[i][0] != '\0' && i < MAX_N_DOMAINS) {
-      if (compare_domains(dns, (unsigned char* )config->domains[i]) == TRUE) {
+	if (compare_domains(dns, (unsigned char* )config->domains[i]) == TRUE) {
             return TRUE;
         }
         i++;
