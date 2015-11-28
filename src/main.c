@@ -1,31 +1,34 @@
 #include "main.h"
 
 void start_statistics() {
-    if((statistics_pid = fork())==0){
-        printf("Stats pid = %lu",(long)getpid());
+    statistics_pid = fork();
+    if(statistics_pid==0){
+        printf("Stats pid = %lu\n",(long)getpid());
         statistics();
         exit(0);
+    }
+    else if(statistics_pid<0){
+	perror("Error creating stats process");
+	exit(1);
     }
 }
 
 void run_config() {
-    int i;
     printf("Started config process\n");
     update_config("../data/config.txt");
-    printf("%d\n",config->n_threads);
-    printf("Domains:\n");
-    for(i = 0; i < MAX_N_DOMAINS; i++) {
-        printf("%d:%s\n",i,config->domains[i]);
-    }
-    printf("Local Domain: %s\n",config->local_domain);
-    printf("PipeName: %s\n",config->pipe_name);
+    sem_post(config_mutex);
 }
 
 
 void create_shared_memory() {
-    configshmid = shmget(IPC_PRIVATE,sizeof(config_struct),IPC_CREAT|0700);
-    config = (config_struct*)shmat(configshmid,NULL,0);
-    update_config("../data/config.txt");  
+    if((configshmid = shmget(IPC_PRIVATE,sizeof(config_struct),IPC_CREAT|0700)) == -1){
+	perror("Error creating shared memory segment");
+	exit(1);
+    }
+    if((config = (config_struct*)shmat(configshmid,NULL,0))== (void*)-1){
+	perror("Error attaching shared memory segment to the address space");
+	exit(1);
+    }
 }
 
 void delete_shared_memory() {
@@ -33,27 +36,36 @@ void delete_shared_memory() {
 }
 
 void start_config() {
-    if((config_pid = fork())==0){
-        printf("Config pid = %lu",(long)getpid());
+    config_pid = fork();
+    if(config_pid == 0){
+        printf("Config pid = %lu\n",(long)getpid());
         run_config();
         exit(0);
+    } else if(config_pid<0){
+	perror("Error creating config process");
+	exit(1);
     }
 }
 
 void create_semaphores() {
     sem_unlink("CONFIG_MUTEX");
-    config_mutex = sem_open("CONFIG_MUTEX",O_CREAT|O_EXCL,0700,1);
+    if((config_mutex = sem_open("CONFIG_MUTEX",O_CREAT|O_EXCL,0700,0)) == SEM_FAILED){
+	perror("Error initializing config semaphore");
+	exit(1);
+    }
     sem_unlink("N_REQUESTS");
-    n_requests = sem_open("N_REQUESTS",O_CREAT|O_EXCL,0700,0);
+    if((n_requests  = sem_open("N_REQUESTS",O_CREAT|O_EXCL,0700,0)) == SEM_FAILED){
+	perror("Error initializing n_requests semaphore");
+	exit(1);
+    }
 }
 
 void send_reply(dnsrequest request, char *ip) {
     sendReply(request.dns_id, (unsigned char*)request.dns_name, inet_addr(ip), request.sockfd, request.dest);
 }
 
-void handle_remote(dnsrequest request) {
+int handle_remote(dnsrequest request) {
     char *command = (char *)malloc(sizeof("dig +short ")+ sizeof(request.dns_name) + 1);
-    char *line;
     char *ip = (char*)malloc(IP_SIZE);
     strcpy(command,"dig +short ");
     strcat(command,request.dns_name);
@@ -67,10 +79,10 @@ void handle_remote(dnsrequest request) {
             strncpy(ip, buff, strlen(buff));
             ip[strlen(ip)-1] = '\0';
             send_reply(request, ip);
-            return;
+            return TRUE;
         }
     }
-    send_reply(request, "0.0.0.0");
+    return FALSE;
 }
 
 void terminate_thread(){
@@ -86,24 +98,27 @@ void *thread_behaviour(void *args) {
         printf("Thread %lu is locked\n",(long)args);
 	sem_wait(n_requests);
 	printf("Thread %lu is writing...\n",(long)args);
-	sleep(3);
+	char aux;
 	if (stack_empty(queue_local) == 0) {
-            request = get_request(LOCAL);
+	    request = get_request(LOCAL);
             if ((request_ip = find_local_mmaped_file(request.dns_name)) != NULL) {
                 send_reply(request, request_ip);
+		aux = 'l';
             } else {
                 send_reply(request, "0.0.0.0");
-            }
+		aux = 'd';
+	    }
 
         } else if (stack_empty(queue_remote) == 0) {
-            request = get_request(REMOTE);
-
-            if (request.dns_id == -1) {
-                send_reply(request, "0.0.0.0");
-            } else {;
-                handle_remote(request);
-            }
+	    request = get_request(REMOTE);
+	    if(handle_remote(request)){
+		aux = 'e';
+	    }else{
+		send_reply(request, "0.0.0.0");
+		aux = 'd';
+	    }
         }
+	write(fd,&aux,sizeof(char));	   
         printf("Thread sleeping");
     }
     pthread_exit(NULL);
@@ -113,9 +128,9 @@ void *thread_behaviour(void *args) {
 
 void create_threads() {
     int i;
-    thread_pool = malloc(sizeof(pthread_t)*config->n_threads);
-    pthread_mutex_init(&mutex_thread,NULL);
-    pthread_cond_init(&cond_thread,NULL);
+    if((thread_pool = malloc(sizeof(pthread_t)*config->n_threads)) == NULL){
+	perror("Error allocating memory for thread pool");
+    }
     for (i = 0; i < config->n_threads; i++) {
         pthread_create(&thread_pool[i], NULL, thread_behaviour, (void*)((long)i));
     }
@@ -191,11 +206,10 @@ void init(int port) {
     create_semaphores();
     create_shared_memory();
     start_config();
-    create_pipe();
     start_statistics();
+    create_pipe();
     create_threads();
     mem_mapped_file_init("../data/localdns.txt");
-    requests_queue = msgget(IPC_PRIVATE, IPC_CREAT|0700);
     create_socket(port);
     send_start_time_to_pipe();
     queue_local = (dns_queue*)malloc(sizeof(dns_queue));
@@ -219,13 +233,12 @@ void send_start_time_to_pipe(){
 
 /* Terminate processes shared_memory and semaphores */
 void terminate() {
-    int i;
     kill(statistics_pid,SIGKILL);
     kill(config_pid,SIGKILL);
     printf("Processes killed\n");
-    msgctl(requests_queue, IPC_RMID, NULL);
     delete_shared_memory();
     delete_semaphores();
+    unlink(config->pipe_name);
     mem_mapped_file_terminate();
 }
 
@@ -234,7 +247,8 @@ int main(int argc, char const *argv[]) {
         printf("Usage: dnsserver <port>\n");
         exit(1);
     }
-    init(atoi(argv[1]));
+    int port = atoi(argv[1]);
+    init(port);
     request_manager();
     terminate();
     return 0;

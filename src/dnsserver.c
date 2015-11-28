@@ -16,7 +16,7 @@ int request_manager(int port)
     sem_wait(config_mutex);
     strcpy(pipe_name,config->pipe_name);
     sem_post(config_mutex);
-    int fd = open(pipe_name, O_WRONLY);
+    fd = open(pipe_name, O_WRONLY);
     while(1) {
         // Receive questions
         len = sizeof(dest);
@@ -78,22 +78,12 @@ int request_manager(int port)
         // Example reply to the received QUERY
         // (Currently replying 10.0.0.2 to all QUERY names)
         // ****************************************
-	char aux;
 	if(validate_local_domain(query.name)){
-	    printf("Pedido local\n");
 	    schedule_request(LOCAL,dns->id,sockfd,query.name,dest);
-	    aux = 'l';
-	    write(fd,&aux,sizeof(char));
 	} else if(validate_remote_domain(query.name)){
-	    printf("Pedido remoto\n");
 	    schedule_request(REMOTE,dns->id,sockfd,query.name,dest);
-	    aux = 'e';
-	    write(fd,&aux,sizeof(char));
 	} else {
-	    printf("Neither\n");
 	    schedule_request(REMOTE,dns->id,sockfd,query.name,dest);
-	    aux = 'd';
-	    write(fd,&aux,sizeof(char));
 	}
 	sem_post(n_requests);
     }

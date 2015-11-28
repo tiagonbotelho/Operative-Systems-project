@@ -24,9 +24,7 @@ domain_struct parse_line(char *line) {
 }
 
 void mem_mapped_file_init(char *path) {
-    int fd;
-    /*int i;*/
-    
+    int fd;    
     fd = open(path, O_RDONLY);
     if (fd == -1) {
         printf("Error opening file");

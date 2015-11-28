@@ -18,7 +18,6 @@
 #include<pthread.h>
 #include<time.h>
 #include<ctype.h>
-
 //Constants
 #define MAX_N_DOMAINS 2
 #define MAX_DOMAIN_CHARS 10
@@ -173,10 +172,7 @@ int configshmid; //shared memory id to configs
 config_struct *config; //config structure in shared memory
 sem_t *config_mutex; //mutex to prevent racing in config
 char *addr; //Address that contains mmapped_file information
-int requests_queue; //message queue for requests
 int sockfd; //Socket that receives requests
-pthread_mutex_t mutex_thread; //Temporary mutex for threads
-pthread_cond_t cond_thread; //Temporary conditional variable
 
 pid_t statistics_pid; //stats process
 pid_t config_pid; //stats process
@@ -191,3 +187,5 @@ dns_queue *queue_remote; // Queue of remote requests
 pthread_t *thread_pool;
 
 sem_t *n_requests;
+
+int fd;
