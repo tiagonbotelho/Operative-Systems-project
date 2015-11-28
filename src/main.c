@@ -80,14 +80,17 @@ void terminate_thread(){
 
 void *thread_behaviour(void *args) {
     signal(SIGUSR1,terminate_thread);
+    sigset_t set;
+    sigaddset(&set, SIGUSR1);
     dnsrequest request;
     char *request_ip;
     while(1){
         printf("Thread %lu is locked\n",(long)args);
-	sem_wait(n_requests);
-	printf("Thread %lu is writing...\n",(long)args);
-	sleep(3);
-	if (stack_empty(queue_local) == 0) {
+        sem_wait(n_requests);
+        pthread_sigmask(SIG_BLOCK, &set, NULL);
+        printf("Thread %lu is writing...\n",(long)args);
+        sleep(3);
+        if (stack_empty(queue_local) == 0) {
             request = get_request(LOCAL);
             if ((request_ip = find_local_mmaped_file(request.dns_name)) != NULL) {
                 send_reply(request, request_ip);
@@ -105,6 +108,7 @@ void *thread_behaviour(void *args) {
             }
         }
         printf("Thread sleeping");
+        pthread_sigmask(SIG_UNBLOCK, &set, NULL);
     }
     pthread_exit(NULL);
     return NULL;
@@ -128,8 +132,12 @@ void delete_semaphores() {
 
 void sigint_handler() {
     terminate();
-    for(int i=0;i<config->n_threads;i++){
-	pthread_kill(thread_pool[i],SIGUSR1);
+    for(int i=0;i<config->n_threads;i++) {
+        pthread_kill(thread_pool[i],SIGUSR1);
+    }
+
+    for (int i = 0; i < config->n_threads; i++) {
+        pthread_join(thread_pool[i], NULL);
     }
     printf("Thank you! Shutting Down\n");
     exit(1);
@@ -180,8 +188,8 @@ void create_pipe(){
     sem_wait(config_mutex);
     unlink(config->pipe_name);
     if(mkfifo(config->pipe_name,O_CREAT|O_EXCL|0600)<0){
-	perror("Cannot create pipe: ");
-	exit(0);
+        perror("Cannot create pipe: ");
+        exit(0);
     }
     sem_post(config_mutex);
 }
