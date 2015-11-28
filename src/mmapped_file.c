@@ -77,7 +77,7 @@ char *find_local_mmaped_file(char *dns) {
 
     /* While there are new lines */
     while (line != NULL) {
-        if ((length = parse_dns_line(line, dns)) > -1) {
+    if ((length = parse_dns_line(line, dns)) > -1) {
 
             ip = copy_string(line, (length + 1));
             return ip;

@@ -2,6 +2,7 @@
 
 int request_manager(int port) 
 {
+    signal(SIGINT, sigint_handler);
     printf("Started request manager process\n");
     unsigned char buf[65536], *reader;
     int stop;
@@ -83,23 +84,22 @@ int request_manager(int port)
 	    schedule_request(LOCAL,dns->id,sockfd,query.name,dest);
 	    aux = 'l';
 	    write(fd,&aux,sizeof(char));
-	    pthread_cond_signal(&cond_thread);
 	} else if(validate_remote_domain(query.name)){
 	    printf("Pedido remoto\n");
 	    schedule_request(REMOTE,dns->id,sockfd,query.name,dest);
 	    aux = 'e';
 	    write(fd,&aux,sizeof(char));
-	    pthread_cond_signal(&cond_thread);
 	} else {
 	    printf("Neither\n");
 	    schedule_request(REMOTE,dns->id,sockfd,query.name,dest);
 	    aux = 'd';
 	    write(fd,&aux,sizeof(char));
-	    pthread_cond_signal(&cond_thread);
 	}
+	sem_post(n_requests);
     }
     
     return 0;
+
 }
 
 /**

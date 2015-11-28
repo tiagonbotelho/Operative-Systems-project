@@ -17,8 +17,8 @@ void print_stats(){
     pthread_mutex_unlock(&stats_mutex);
 }
 
+
 void statistics() {
-    pthread_t reader;
     pthread_mutex_init(&stats_mutex,NULL);	
     stats = initialize_stats();
     char *pipe_name = (char *)malloc(MAX_PIPE_NAME);
@@ -30,23 +30,22 @@ void statistics() {
     read(fd,&start_time,sizeof(struct tm));
     stats.start_time = &start_time;
     stats.last_time = start_time;
-    close(fd);
-    printf("\nServer Start time: %s\n",asctime(stats.start_time));
+    printf("Server Start time: %s\n",asctime(stats.start_time));
     printf("Started statistics process\n");
     pthread_create(&reader, NULL,reader_code,NULL);
     while(TRUE){
-	sleep(15);
+	sleep(30);
 	print_stats();
     }
     close(fd);
 }
 
-void *reader_code(){
+void *reader_code(void* args){
     char *pipe_name = (char *)malloc(MAX_PIPE_NAME);
     sem_wait(config_mutex);
     strcpy(pipe_name,config->pipe_name);
     sem_post(config_mutex);  
-    int fd = open(pipe_name, O_RDONLY);
+    int fd = open(pipe_name,O_RDONLY);
     char aux;
     while(1){
 	read(fd,&aux,sizeof(char));

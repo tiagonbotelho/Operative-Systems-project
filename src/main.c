@@ -43,6 +43,8 @@ void start_config() {
 void create_semaphores() {
     sem_unlink("CONFIG_MUTEX");
     config_mutex = sem_open("CONFIG_MUTEX",O_CREAT|O_EXCL,0700,1);
+    sem_unlink("N_REQUESTS");
+    n_requests = sem_open("N_REQUESTS",O_CREAT|O_EXCL,0700,0);
 }
 
 void send_reply(dnsrequest request, char *ip) {
@@ -71,16 +73,22 @@ void handle_remote(dnsrequest request) {
     send_reply(request, "0.0.0.0");
 }
 
+void terminate_thread(){
+    printf("Thread morreu\n ");
+    pthread_exit(0);
+}
+
 void *thread_behaviour(void *args) {
+    signal(SIGUSR1,terminate_thread);
     dnsrequest request;
     char *request_ip;
     while(1){
         printf("Thread %lu is locked\n",(long)args);
-        pthread_cond_wait(&cond_thread,&mutex_thread);
-        printf("Thread %lu is writing...\n",(long)args);
-        if (stack_empty(queue_local) == 0) {
+	sem_wait(n_requests);
+	printf("Thread %lu is writing...\n",(long)args);
+	sleep(3);
+	if (stack_empty(queue_local) == 0) {
             request = get_request(LOCAL);
-
             if ((request_ip = find_local_mmaped_file(request.dns_name)) != NULL) {
                 send_reply(request, request_ip);
             } else {
@@ -96,9 +104,7 @@ void *thread_behaviour(void *args) {
                 handle_remote(request);
             }
         }
-
         printf("Thread sleeping");
-        pthread_mutex_unlock(&mutex_thread);
     }
     pthread_exit(NULL);
     return NULL;
@@ -107,7 +113,7 @@ void *thread_behaviour(void *args) {
 
 void create_threads() {
     int i;
-    pthread_t thread_pool[config->n_threads];
+    thread_pool = malloc(sizeof(pthread_t)*config->n_threads);
     pthread_mutex_init(&mutex_thread,NULL);
     pthread_cond_init(&cond_thread,NULL);
     for (i = 0; i < config->n_threads; i++) {
@@ -122,6 +128,9 @@ void delete_semaphores() {
 
 void sigint_handler() {
     terminate();
+    for(int i=0;i<config->n_threads;i++){
+	pthread_kill(thread_pool[i],SIGUSR1);
+    }
     printf("Thank you! Shutting Down\n");
     exit(1);
 }
@@ -213,6 +222,7 @@ void terminate() {
     int i;
     kill(statistics_pid,SIGKILL);
     kill(config_pid,SIGKILL);
+    printf("Processes killed\n");
     msgctl(requests_queue, IPC_RMID, NULL);
     delete_shared_memory();
     delete_semaphores();
@@ -224,7 +234,6 @@ int main(int argc, char const *argv[]) {
         printf("Usage: dnsserver <port>\n");
         exit(1);
     }
-    signal(SIGINT, sigint_handler);
     init(atoi(argv[1]));
     request_manager();
     terminate();

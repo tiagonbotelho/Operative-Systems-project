@@ -3,6 +3,7 @@
 
 //Gets info from config file and updates the config shared memory
 void update_config(char* path){
+    signal(SIGINT,SIG_IGN);
     sem_wait(config_mutex);
     FILE* file = fopen(path,"r");
     char aux;

@@ -131,6 +131,7 @@ void statistics();
 void terminate();
 void create_pipe();
 void send_start_time_to_pipe();
+void sigint_handler();
 
 //Queues.c
 dnsrequest get_request(int queue);
@@ -180,8 +181,13 @@ pthread_cond_t cond_thread; //Temporary conditional variable
 pid_t statistics_pid; //stats process
 pid_t config_pid; //stats process
 
+pthread_t reader; //thread that reads from pipe
 pthread_mutex_t stats_mutex;
 
 stats_struct stats;
 dns_queue *queue_local; // Queue of local requests
 dns_queue *queue_remote; // Queue of remote requests
+
+pthread_t *thread_pool;
+
+sem_t *n_requests;
