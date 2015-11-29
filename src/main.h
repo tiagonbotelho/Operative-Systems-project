@@ -182,9 +182,9 @@ void print_time_instant(time_instant time);
 
 //Global variables
 int configshmid; //shared memory id to configs
-int maintenanceshmid;
+int maintenanceshmid; //shared memory id to maintenance variable
 config_struct *config; //config structure in shared memory
-sem_t *wait_for_config; //mutex to prevent racing in config
+sem_t *wait_for_config; //mutex to prevent access to config when config process is updating it
 char *addr; //Address that contains mmapped_file information
 int sockfd; //Socket that receives requests
 
@@ -192,26 +192,22 @@ pid_t statistics_pid; //stats process
 pid_t config_pid; //stats process
 
 pthread_t reader; //thread that reads from pipe
-pthread_mutex_t stats_mutex;
+pthread_mutex_t stats_mutex; //mutex that guarantees mutual exclusion in stats
 
-pthread_mutex_t local_buffer_mutex;
-pthread_mutex_t remote_buffer_mutex;
-
-pthread_mutex_t pipe_mutex;
-
-stats_struct stats;
 dns_queue *queue_local; // Queue of local requests
 dns_queue *queue_remote; // Queue of remote requests
+stats_struct stats; //stats variable
+pthread_mutex_t local_buffer_mutex; //buffer of local requests
+pthread_mutex_t remote_buffer_mutex; //buffer of remote request
+ 
+pthread_mutex_t pipe_mutex; //mutex to prevent threads sending to pipe at the same time
 
-pthread_t *thread_pool;
+int *in_maintenance; //1 if in maintenance, 0 otherwise
 
-sem_t *n_requests;
+sem_t *in_maintenance_mutex; //semaphore to guarantee mutual exclusion in maintenance shared memory
 
-int fd;
+sem_t *n_requests; //semaphore where threads wait for requests
 
-pthread_cond_t cond_config_state;
+int fd; //pipe where threads send type of requests
 
-int *in_maintenance;
-pthread_mutex_t cond_maintenance_lock;
-
-sem_t *in_maintenance_mutex;
+pthread_t *thread_pool; //pool of threads that handle requests

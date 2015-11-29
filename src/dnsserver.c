@@ -75,7 +75,6 @@ int request_manager(int port)
 	sem_wait(wait_for_config);
 	if(validate_local_domain((char *)query.name)){
 	    pthread_mutex_lock(&local_buffer_mutex);
-	    printf("HEY BITCH GET OUT tHe yAW\n");
 	    schedule_request(LOCAL,dns->id,sockfd,query.name,dest);
 	    pthread_mutex_unlock(&local_buffer_mutex);
 	    sem_post(n_requests);
@@ -162,9 +161,9 @@ u_char* convertRFC2Name(unsigned char* reader,unsigned char* buffer,int* count) 
     int i , j;
 
     *count = 1;
-    name = (unsigned char*)malloc(256);
+    name = (unsigned char*)malloc (256);
 
-    name[0]='\0';
+     name[0]='\0'; 
 
     while(*reader!=0) {
 	if(*reader>=192) {

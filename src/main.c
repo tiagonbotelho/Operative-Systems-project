@@ -55,8 +55,6 @@ void create_semaphores() {
     pthread_mutex_init(&remote_buffer_mutex,NULL);
     pthread_mutex_init(&local_buffer_mutex,NULL);
     pthread_mutex_init(&pipe_mutex,NULL);
-    pthread_mutex_init(&cond_maintenance_lock,NULL);
-    pthread_cond_init(&cond_config_state,NULL);
     sem_unlink("WAIT_FOR_CONFIG");
     if((wait_for_config = sem_open("WAIT_FOR_CONFIG",O_CREAT|O_EXCL,0700,0)) == SEM_FAILED){
         perror("Error initializing wait for config semaphore");
@@ -100,7 +98,6 @@ int handle_remote(dnsrequest request) {
 }
 
 void terminate_thread(){
-    printf("Thread morreu\n");
     pthread_exit(0);
 }
 
@@ -112,9 +109,7 @@ void *thread_behaviour(void *args) {
     dnsrequest request;
     char *request_ip;
     while(1){
-        printf("Thread %lu is locked\n",(long)args);
         sem_wait(n_requests);
-        printf("Thread %lu is writing\n",(long)args);
         pthread_sigmask(SIG_BLOCK, &set, NULL);
         char aux;
         if (stack_empty(queue_local,local_buffer_mutex) == 0) {
@@ -126,6 +121,9 @@ void *thread_behaviour(void *args) {
                 send_reply(request, "0.0.0.0");
                 aux = 'd';
             }
+	    pthread_mutex_lock(&pipe_mutex);
+	    write(fd,&aux,sizeof(char));
+	    pthread_mutex_unlock(&pipe_mutex);
         }
         else if (stack_empty(queue_remote,remote_buffer_mutex) == 0) {
             request = get_request(REMOTE);
@@ -133,29 +131,24 @@ void *thread_behaviour(void *args) {
             if(!*in_maintenance){
                 if(validate_remote_domain(request.dns_name)){
                     if(handle_remote(request)){
-                        printf("HMMM\n");
                         aux = 'e';
                     }else{
-                        printf("HAHA\n");
                         send_reply(request, "0.0.0.0");
                         aux = 'd';
                     }
                 }
                 else{
-                    printf("Hieieie\n");
                     send_reply(request, "0.0.0.0");
                     aux = 'd';
                 }
+		pthread_mutex_lock(&pipe_mutex);
+		write(fd,&aux,sizeof(char));
+		pthread_mutex_unlock(&pipe_mutex);
             }
             sem_post(in_maintenance_mutex);
         }
         pthread_sigmask(SIG_UNBLOCK, &set, NULL);
-        pthread_mutex_lock(&pipe_mutex);
-        write(fd,&aux,sizeof(char));
-        pthread_mutex_unlock(&pipe_mutex);
-        printf("Thread %lu is sleeping\n",(long)args);
     }
-    pthread_exit(NULL);
     return NULL;
 }
 
@@ -178,16 +171,12 @@ void delete_semaphores() {
     pthread_mutex_destroy(&stats_mutex);	
     pthread_mutex_destroy(&remote_buffer_mutex);
     pthread_mutex_destroy(&local_buffer_mutex);
+    pthread_mutex_destroy(&pipe_mutex);
+
 }
 
 void sigint_handler() {
     printf("Thank you! Shutting Down\n");
-    for(int i=0;i<config->n_threads;i++){
-        pthread_kill(thread_pool[i],SIGUSR1);
-    }
-    for (int i = 0; i < config->n_threads; i++) {
-        pthread_join(thread_pool[i], NULL);
-    }
     terminate();
     exit(1);
 }
@@ -232,7 +221,6 @@ void create_pipe(){
         perror("Cannot create pipe: ");
         exit(0);
     }
-    printf("Created pipe\n");
 }
 
 /* Initializes semaphores shared mem config statistics and threads */
@@ -281,10 +269,24 @@ void send_start_time_to_pipe(){
 
 /* Terminate processes shared_memory and semaphores */
 void terminate() {
+    for(int i=0;i<config->n_threads;i++){
+	pthread_kill(thread_pool[i],SIGUSR1);
+    }
+    for (int i = 0; i < config->n_threads; i++) {
+        pthread_join(thread_pool[i], NULL);
+    }
+    
     unlink(config->pipe_name);
+    int i;
+    for(i=0;i<2;i++){
+	wait(NULL);
+    }
     mem_mapped_file_terminate();
     delete_shared_memory();
     delete_semaphores();
+    free(queue_local);
+    free(queue_remote);
+    free(thread_pool);
 }
 
 int main(int argc, char const *argv[]) {
@@ -298,17 +300,3 @@ int main(int argc, char const *argv[]) {
     terminate();
     return 0;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -1,0 +1,36 @@
+CC = gcc
+#compiler flags
+FLAGS = -Wall
+#linker flags ! check line 17
+LDFLAGS = -lpthread -D_REENTRANT 
+OBJS = config.o dnsserver.o main.o mmapped_file.o queues.o stats.o
+PROG = dnsserver
+
+###########
+
+all: ${PROG}
+
+clean:
+	rm ../build/ ${OBJS} ${PROG}
+
+${PROG}:  ${OBJS}
+	${CC} ${FLAGS} ${OBJS} -o $@ ${LDFLAGS}
+
+.c.o:
+	${CC} $< -c -o ../build/ $@ 
+
+###########
+config.o: ../src/main.h ../src/config.c
+
+dnsserver.o: ../src/main.h ../src/dnsserver.c
+
+main.o: ../src/main.h ../src/main.c
+
+mmapped_file.o: ../src/main.h ../src/mmapped_file.c
+
+queues.o: ../src/main.h ../src/queues.c
+
+stats.o: ../src/main.h ../src/stats.c
+
+
+
