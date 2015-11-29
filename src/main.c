@@ -242,8 +242,8 @@ void init(int port) {
     start_config();
     sem_wait(wait_for_config);
     sem_post(wait_for_config);
-    start_statistics();
     create_pipe();
+    start_statistics();
     create_threads();
     mem_mapped_file_init("../data/localdns.txt");
     create_socket(port);
