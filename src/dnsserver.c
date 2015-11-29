@@ -17,7 +17,6 @@ int request_manager(int port)
 	// Receive questions
         len = sizeof(dest);
         printf("\n\n-- Wating for DNS message --\n\n");
-	printf("PASSOU\n");
         if (recvfrom (sockfd,(char*)buf , 65536 , 0 , (struct sockaddr*)&dest , &len) < 0) {
             printf("Error while waiting for DNS message. Exiting...\n");
             exit(1);
@@ -73,14 +72,25 @@ int request_manager(int port)
         // ****************************************
         // Example reply to the received QUERY
         // ****************************************
-	if(validate_local_domain(query.name)){
+	sem_wait(wait_for_config);
+	if(validate_local_domain((char *)query.name)){
+	    pthread_mutex_lock(&local_buffer_mutex);
+	    printf("HEY BITCH GET OUT tHe yAW\n");
 	    schedule_request(LOCAL,dns->id,sockfd,query.name,dest);
-	} else if(validate_remote_domain(query.name)){
-	    schedule_request(REMOTE,dns->id,sockfd,query.name,dest);
-	} else {
-	    schedule_request(REMOTE,dns->id,sockfd,query.name,dest);
+	    pthread_mutex_unlock(&local_buffer_mutex);
+	    sem_post(n_requests);
 	}
-	sem_post(n_requests);
+	else {
+	    sem_wait(in_maintenance_mutex);
+	    if(!*in_maintenance){
+		pthread_mutex_lock(&remote_buffer_mutex);
+		schedule_request(REMOTE,dns->id,sockfd,query.name,dest);
+		pthread_mutex_unlock(&remote_buffer_mutex);
+		sem_post(n_requests);
+	    }
+	    sem_post(in_maintenance_mutex);
+	}
+	sem_post(wait_for_config);
     }
     
     return 0;
@@ -219,7 +229,7 @@ int get_size(char *dns) {
     return i;
 }
 
-int compare_domains(unsigned char *to_compare, unsigned char *comparable) {
+int compare_domains(char *to_compare,  char *comparable) {
     int size = strlen((char *)to_compare);
     int size_comp = strlen((char *)comparable);
     int i;
@@ -233,15 +243,16 @@ int compare_domains(unsigned char *to_compare, unsigned char *comparable) {
     return TRUE;
 }
 
-int validate_local_domain(unsigned char *dns) {
-    return compare_domains(dns, (unsigned char*)config->local_domain);
+int validate_local_domain(char *dns) {
+    return compare_domains(dns, config->local_domain);
 }
 
-int validate_remote_domain(unsigned char *dns) {
+int validate_remote_domain(char *dns) {
     int i = 0; 
-
+	    
     while (config->domains[i][0] != '\0' && i < MAX_N_DOMAINS) {
-	if (compare_domains(dns, (unsigned char* )config->domains[i]) == TRUE) {
+	printf("%s\n",config->domains[i]);
+	if (compare_domains(dns, config->domains[i]) == TRUE) {
             return TRUE;
         }
         i++;
