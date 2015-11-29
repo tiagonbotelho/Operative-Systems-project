@@ -19,8 +19,13 @@ void print_stats(){
     pthread_mutex_unlock(&stats_mutex);
 }
 
+void terminate_stats(){
+    pthread_kill(reader,SIGKILL);
+    exit(1);
+}
 
 void statistics() {
+    signal(SIGINT,terminate_stats);
     printf("Started statistics process\n");
     stats = initialize_stats();
     int start_time_pipe = open(config->pipe_name, O_RDONLY);
@@ -48,7 +53,6 @@ void *reader_code(void* args){
     int read_fd = open(config->pipe_name,O_RDONLY);
     while(1){
 	read(read_fd,&aux,sizeof(char));
-	printf("OLA\n");
 	pthread_mutex_lock(&stats_mutex);
 	if(aux == 'l'){
 	    stats.local_domains_resolved++;
@@ -60,7 +64,6 @@ void *reader_code(void* args){
 	    stats.requests_denied++;
 	}
 	stats.last_time = get_current_time();
-	print_time_instant(stats.last_time);
 	pthread_mutex_unlock(&stats_mutex);
     }
 }

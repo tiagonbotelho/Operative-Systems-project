@@ -13,7 +13,12 @@ void start_statistics() {
     }
 }
 
+void terminate_config(){
+    exit(0);
+}
+
 void run_config() {
+    signal(SIGINT,terminate_config);
     printf("Started config process\n");
     update_config("../data/config.txt");
     sem_post(wait_for_config);
@@ -87,7 +92,7 @@ int handle_remote(dnsrequest request) {
 }
 
 void terminate_thread(){
-    printf("Thread morreu\n ");
+    printf("Thread morreu\n");
     pthread_exit(0);
 }
 
@@ -147,15 +152,13 @@ void delete_semaphores() {
 }
 
 void sigint_handler() {
-    terminate();
+    printf("Thank you! Shutting Down\n");
     for(int i=0;i<config->n_threads;i++){
 	pthread_kill(thread_pool[i],SIGUSR1);
     }
-    printf("Thank you! Shutting Down\n");
+    terminate();
     exit(1);
 }
-
-
 
 void create_socket(int port){
     struct sockaddr_in servaddr; 
@@ -245,13 +248,12 @@ void send_start_time_to_pipe(){
 
 /* Terminate processes shared_memory and semaphores */
 void terminate() {
-    kill(statistics_pid,SIGKILL);
-    kill(config_pid,SIGKILL);
     printf("Processes killed\n");
-    delete_shared_memory();
-    delete_semaphores();
     unlink(config->pipe_name);
     mem_mapped_file_terminate();
+    delete_shared_memory();
+    delete_semaphores();
+    printf("TESTE\n");
 }
 
 int main(int argc, char const *argv[]) {
