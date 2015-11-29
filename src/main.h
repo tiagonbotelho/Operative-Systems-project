@@ -42,13 +42,23 @@ typedef struct config{
     char pipe_name[MAX_PIPE_NAME];
 } config_struct;
 
+typedef struct time{
+    int day;
+    int month;
+    int year;
+    int hour;
+    int minute;
+    int seconds;
+} time_instant;
+
 typedef struct stats{
-    struct tm *start_time;
+    time_instant start_time;
     int requests_denied;
     int local_domains_resolved;
     int extern_domains_resolved;
-    struct tm last_time;
+    time_instant last_time;
 } stats_struct;
+
 
 typedef struct domain {
     char ip[IP_SIZE];
@@ -131,6 +141,7 @@ void terminate();
 void create_pipe();
 void send_start_time_to_pipe();
 void sigint_handler();
+time_instant get_current_time();
 
 //Queues.c
 dnsrequest get_request(int queue);
@@ -166,11 +177,12 @@ void print_stats();
 stats_struct initialize_stats();
 void update_stats(stats_struct stats,int fd);
 void *reader_code();
+void print_time_instant(time_instant time);
 
 //Global variables
 int configshmid; //shared memory id to configs
 config_struct *config; //config structure in shared memory
-sem_t *config_mutex; //mutex to prevent racing in config
+sem_t *wait_for_config; //mutex to prevent racing in config
 char *addr; //Address that contains mmapped_file information
 int sockfd; //Socket that receives requests
 

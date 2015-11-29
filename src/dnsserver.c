@@ -9,18 +9,15 @@ int request_manager(int port)
     struct DNS_HEADER *dns = NULL;
     struct sockaddr_in dest;
     socklen_t len;
+    fd = open(config->pipe_name,O_WRONLY);
     // ****************************************
     // Receive questions
     // ****************************************
-    char *pipe_name = (char *)malloc(MAX_PIPE_NAME);
-    sem_wait(config_mutex);
-    strcpy(pipe_name,config->pipe_name);
-    sem_post(config_mutex);
-    fd = open(pipe_name, O_WRONLY);
     while(1) {
-        // Receive questions
+	// Receive questions
         len = sizeof(dest);
         printf("\n\n-- Wating for DNS message --\n\n");
+	printf("PASSOU\n");
         if (recvfrom (sockfd,(char*)buf , 65536 , 0 , (struct sockaddr*)&dest , &len) < 0) {
             printf("Error while waiting for DNS message. Exiting...\n");
             exit(1);
@@ -30,7 +27,6 @@ int request_manager(int port)
 
         // Process received message
         dns = (struct DNS_HEADER*) buf;
-        //qname =(unsigned char*)&buf[sizeof(struct DNS_HEADER)];
         reader = &buf[sizeof(struct DNS_HEADER)];
 	
         printf("\nThe query %d contains: ", ntohs(dns->id));
@@ -76,7 +72,6 @@ int request_manager(int port)
 	
         // ****************************************
         // Example reply to the received QUERY
-        // (Currently replying 10.0.0.2 to all QUERY names)
         // ****************************************
 	if(validate_local_domain(query.name)){
 	    schedule_request(LOCAL,dns->id,sockfd,query.name,dest);

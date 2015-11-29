@@ -42,7 +42,6 @@ void mem_mapped_file_init(char *path) {
 
 int parse_dns_line(char *line,char *dns) {
     int i = 0;
-
     while (line[i] != ' ' && dns[i] != '\0') {
 	if (line[i] != dns[i]) {
 	    return -1;

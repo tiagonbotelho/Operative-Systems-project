@@ -16,7 +16,7 @@ void start_statistics() {
 void run_config() {
     printf("Started config process\n");
     update_config("../data/config.txt");
-    sem_post(config_mutex);
+    sem_post(wait_for_config);
 }
 
 
@@ -48,9 +48,10 @@ void start_config() {
 }
 
 void create_semaphores() {
-    sem_unlink("CONFIG_MUTEX");
-    if((config_mutex = sem_open("CONFIG_MUTEX",O_CREAT|O_EXCL,0700,0)) == SEM_FAILED){
-	perror("Error initializing config semaphore");
+    pthread_mutex_init(&stats_mutex,NULL);	
+    sem_unlink("WAIT_FOR_CONFIG");
+    if((wait_for_config = sem_open("WAIT_FOR_CONFIG",O_CREAT|O_EXCL,0700,0)) == SEM_FAILED){
+	perror("Error initializing n_requests semaphore");
 	exit(1);
     }
     sem_unlink("N_REQUESTS");
@@ -118,8 +119,9 @@ void *thread_behaviour(void *args) {
 		aux = 'd';
 	    }
         }
-	write(fd,&aux,sizeof(char));	   
-        printf("Thread sleeping");
+	write(fd,&aux,sizeof(char));
+	printf("Thread sleeping");
+	
     }
     pthread_exit(NULL);
     return NULL;
@@ -131,14 +133,17 @@ void create_threads() {
     if((thread_pool = malloc(sizeof(pthread_t)*config->n_threads)) == NULL){
 	perror("Error allocating memory for thread pool");
     }
-    for (i = 0; i < config->n_threads; i++) {
-        pthread_create(&thread_pool[i], NULL, thread_behaviour, (void*)((long)i));
+    int n = config->n_threads;
+    for (i = 0; i < n; i++) {
+        pthread_create(&thread_pool[i], NULL, thread_behaviour, (void*)((long)i));	
     }
 }
 
 void delete_semaphores() {
-    sem_close(config_mutex);
-    sem_unlink("CONFIG_MUTEX");
+    sem_close(n_requests);
+    sem_unlink("N_REQUESTS");
+    sem_close(wait_for_config);
+    sem_unlink("WAIT_FOR_CONFIG");
 }
 
 void sigint_handler() {
@@ -153,19 +158,13 @@ void sigint_handler() {
 
 
 void create_socket(int port){
-    struct sockaddr_in servaddr;
-    // Get server UDP port number
-    if(port <= 0) {
-        printf("Usage: dnsserver <port>\n");
-        exit(1);
-    }
-
+    struct sockaddr_in servaddr; 
     // Create UDP socket
     sockfd = socket(AF_INET , SOCK_DGRAM , IPPROTO_UDP); //UDP packet for DNS queries
 
     // If failed to open socket
     if (sockfd < 0) {
-        printf("ERROR opening socket.\n");
+        perror("ERROR opening socket");
         exit(1);
     }
 
@@ -175,7 +174,7 @@ void create_socket(int port){
     servaddr.sin_addr.s_addr=htonl(INADDR_ANY);
     servaddr.sin_port=htons(port);
 
-    // Bind application to UDP port
+    // Bind application to UDP nnport
     int res = bind(sockfd,(struct sockaddr *)&servaddr,sizeof(servaddr));
 
     // Failure on association of application to UDP port
@@ -187,18 +186,18 @@ void create_socket(int port){
         } else {
             printf("Please make sure this UDP port is not being used.\n");
         }
+	terminate();
         exit(1);
     } 
 }
 
 void create_pipe(){
-    sem_wait(config_mutex);
     unlink(config->pipe_name);
     if(mkfifo(config->pipe_name,O_CREAT|O_EXCL|0600)<0){
 	perror("Cannot create pipe: ");
 	exit(0);
     }
-    sem_post(config_mutex);
+    printf("Created pipe\n");
 }
 
 /* Initializes semaphores shared mem config statistics and threads */
@@ -206,29 +205,42 @@ void init(int port) {
     create_semaphores();
     create_shared_memory();
     start_config();
+    sem_wait(wait_for_config);
     start_statistics();
     create_pipe();
     create_threads();
     mem_mapped_file_init("../data/localdns.txt");
     create_socket(port);
     send_start_time_to_pipe();
-    queue_local = (dns_queue*)malloc(sizeof(dns_queue));
-    queue_remote = (dns_queue*)malloc(sizeof(dns_queue));
+    if((queue_local = (dns_queue*)malloc(sizeof(dns_queue)))==NULL){
+	perror("Error allocating local queue");
+    }
+    if((queue_remote = (dns_queue*)malloc(sizeof(dns_queue)))==NULL){
+	perror("Error allocating remote queue");
+    }
     queue_local = NULL;
     queue_remote = NULL;
 }
 
-void send_start_time_to_pipe(){
-    char *pipe_name = (char *)malloc(MAX_PIPE_NAME);
-    sem_wait(config_mutex);
-    strcpy(pipe_name,config->pipe_name);
-    sem_post(config_mutex);
-    int fd = open(pipe_name,O_WRONLY);
+time_instant get_current_time(){
     time_t rawtime;
     time (&rawtime);
-    struct tm start_time = *localtime ( &rawtime );
-    write(fd,&start_time,sizeof(struct tm));
-    close(fd);
+    struct tm *current_time = localtime ( &rawtime );
+    time_instant now;
+    now.hour = current_time->tm_hour;
+    now.minute = current_time->tm_min;
+    now.seconds = current_time->tm_sec;
+    now.day = current_time->tm_mday;
+    now.month = current_time->tm_mon +1;
+    now.year = current_time->tm_year + 1900;
+    return now;
+}
+
+void send_start_time_to_pipe(){
+    int start_time_pipe= open(config->pipe_name,O_WRONLY);
+    time_instant now = get_current_time();
+    write(start_time_pipe,&now,sizeof(time_instant));
+    close(start_time_pipe);
 }
 
 /* Terminate processes shared_memory and semaphores */
@@ -253,5 +265,17 @@ int main(int argc, char const *argv[]) {
     terminate();
     return 0;
 }
+
+
+
+
+
+
+
+
+
+
+
+
 
 
