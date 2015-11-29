@@ -1,4 +1,4 @@
 Threads = 5
-Domains = uc.pt; edu
+Domains = uc.pt;
 LocalDomain = so.local
 NamedPipeEstatisticas = statistics

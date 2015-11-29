@@ -19,12 +19,14 @@ void push(dnsrequest item, dns_queue **top) {
     *top = tmp;
 }
 
-int stack_empty(dns_queue *tmp) {
+int stack_empty(dns_queue *tmp,pthread_mutex_t mutex) {
+    pthread_mutex_lock(&mutex);
     if (tmp == NULL) {
         return 1;
     } else {
         return 0;
     }
+    pthread_mutex_unlock(&mutex);
 }
 
 void schedule_request(int queue,short dns_id, int sockfd, unsigned char *dns_name, struct sockaddr_in dest){

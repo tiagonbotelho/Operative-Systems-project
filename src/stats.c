@@ -30,7 +30,7 @@ void statistics() {
     stats = initialize_stats();
     int start_time_pipe = open(config->pipe_name, O_RDONLY);
     if(start_time_pipe<0){
-	perror("Erro");
+	perror("Error opening pipe for read");
     }
     time_instant start_time;
     read(start_time_pipe,&start_time,sizeof(time_instant));

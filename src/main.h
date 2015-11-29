@@ -148,8 +148,8 @@ time_instant get_current_time();
 dnsrequest get_request(int queue);
 void schedule_request(int queue,short dns_id, int sockfd,unsigned char *ip, struct sockaddr_in dest);
 dns_queue *get_node(dnsrequest item);
-int stack_empty(dns_queue *tmp);
 dnsrequest pop(dns_queue **top);
+int stack_empty(dns_queue *tmp,pthread_mutex_t mutex);
 void push(dnsrequest item, dns_queue **top);
 
 
@@ -169,9 +169,9 @@ int request_manager();
 void sendReply(unsigned short id, unsigned char* query, int ip_addr, int sockfd, struct sockaddr_in dest);
 u_char* convertRFC2Name(unsigned char* reader,unsigned char* buffer,int* count);
 void convertName2RFC(unsigned char* dns,unsigned char* host);
-int compare_domains(unsigned char *to_compare, unsigned char *comparable);
-int validate_local_domain(unsigned char *dns);
-int validate_remote_domain(unsigned char *dns);
+int compare_domains(char *to_compare,char *comparable);
+int validate_local_domain(char *dns);
+int validate_remote_domain(char *dns);
 
 //Stats.c
 void print_stats();
@@ -182,6 +182,7 @@ void print_time_instant(time_instant time);
 
 //Global variables
 int configshmid; //shared memory id to configs
+int maintenanceshmid;
 config_struct *config; //config structure in shared memory
 sem_t *wait_for_config; //mutex to prevent racing in config
 char *addr; //Address that contains mmapped_file information
@@ -193,6 +194,11 @@ pid_t config_pid; //stats process
 pthread_t reader; //thread that reads from pipe
 pthread_mutex_t stats_mutex;
 
+pthread_mutex_t local_buffer_mutex;
+pthread_mutex_t remote_buffer_mutex;
+
+pthread_mutex_t pipe_mutex;
+
 stats_struct stats;
 dns_queue *queue_local; // Queue of local requests
 dns_queue *queue_remote; // Queue of remote requests
@@ -202,3 +208,10 @@ pthread_t *thread_pool;
 sem_t *n_requests;
 
 int fd;
+
+pthread_cond_t cond_config_state;
+
+int *in_maintenance;
+pthread_mutex_t cond_maintenance_lock;
+
+sem_t *in_maintenance_mutex;
