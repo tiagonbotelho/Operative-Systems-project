@@ -31,7 +31,7 @@ void terminate_config(){
 
 void config_updated(){
     sem_wait(wait_for_config);
-    memset(config,';',sizeof(config_struct));
+    memset(config,0,sizeof(config_struct));
     update_config("../data/config.txt");
     sem_post(wait_for_config);
     printf("Config updated\n");
