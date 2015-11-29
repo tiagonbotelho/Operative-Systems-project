@@ -97,40 +97,43 @@ void terminate_thread(){
 }
 
 void *thread_behaviour(void *args) {
+    sigset_t set;
     signal(SIGUSR1,terminate_thread);
+    sigaddset(&set, SIGUSR1);
     dnsrequest request;
     char *request_ip;
     while(1){
         printf("Thread %lu is locked\n",(long)args);
-	sem_wait(n_requests);
-	printf("Thread %lu is writing...\n",(long)args);
-	char aux;
-	if (stack_empty(queue_local) == 0) {
-	    request = get_request(LOCAL);
+        sem_wait(n_requests);
+        pthread_sigmask(SIG_BLOCK, &set, NULL);
+        printf("Thread %lu is writing...\n",(long)args);
+        char aux;
+        if (stack_empty(queue_local) == 0) {
+            request = get_request(LOCAL);
             if ((request_ip = find_local_mmaped_file(request.dns_name)) != NULL) {
                 send_reply(request, request_ip);
-		aux = 'l';
+                aux = 'l';
             } else {
                 send_reply(request, "0.0.0.0");
-		aux = 'd';
-	    }
+                aux = 'd';
+            }
 
         } else if (stack_empty(queue_remote) == 0) {
-	    request = get_request(REMOTE);
-	    if(handle_remote(request)){
-		aux = 'e';
-	    }else{
-		send_reply(request, "0.0.0.0");
-		aux = 'd';
-	    }
+            request = get_request(REMOTE);
+            if(handle_remote(request)){
+                aux = 'e';
+            }else{
+                send_reply(request, "0.0.0.0");
+                aux = 'd';
+            }
         }
-	write(fd,&aux,sizeof(char));
-	printf("Thread sleeping");
-	
+        printf("Thread sleeping");
+        write(fd,&aux,sizeof(char));
+        pthread_sigmask(SIG_UNBLOCK, &set, NULL);
+        printf("Thread sleeping");
     }
     pthread_exit(NULL);
     return NULL;
-
 }
 
 void create_threads() {
@@ -155,6 +158,9 @@ void sigint_handler() {
     printf("Thank you! Shutting Down\n");
     for(int i=0;i<config->n_threads;i++){
 	pthread_kill(thread_pool[i],SIGUSR1);
+    }
+    for (int i = 0; i < config->n_threads; i++) {
+        pthread_join(thread_pool[i], NULL);
     }
     terminate();
     exit(1);
@@ -197,8 +203,8 @@ void create_socket(int port){
 void create_pipe(){
     unlink(config->pipe_name);
     if(mkfifo(config->pipe_name,O_CREAT|O_EXCL|0600)<0){
-	perror("Cannot create pipe: ");
-	exit(0);
+        perror("Cannot create pipe: ");
+        exit(0);
     }
     printf("Created pipe\n");
 }
