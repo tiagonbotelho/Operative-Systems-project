@@ -107,6 +107,7 @@ void *thread_behaviour(void *args) {
         sem_wait(n_requests);
         pthread_sigmask(SIG_BLOCK, &set, NULL);
         printf("Thread %lu is writing...\n",(long)args);
+        sleep(3);
         char aux;
         if (stack_empty(queue_local) == 0) {
             request = get_request(LOCAL);
