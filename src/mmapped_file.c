@@ -24,9 +24,7 @@ domain_struct parse_line(char *line) {
 }
 
 void mem_mapped_file_init(char *path) {
-    int fd;
-    /*int i;*/
-    
+    int fd;    
     fd = open(path, O_RDONLY);
     if (fd == -1) {
         printf("Error opening file");
@@ -44,7 +42,6 @@ void mem_mapped_file_init(char *path) {
 
 int parse_dns_line(char *line,char *dns) {
     int i = 0;
-
     while (line[i] != ' ' && dns[i] != '\0') {
 	if (line[i] != dns[i]) {
 	    return -1;

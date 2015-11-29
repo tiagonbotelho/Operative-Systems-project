@@ -3,8 +3,6 @@
 
 //Gets info from config file and updates the config shared memory
 void update_config(char* path){
-    signal(SIGINT,SIG_IGN);
-    sem_wait(config_mutex);
     FILE* file = fopen(path,"r");
     char aux;
     fscanf(file,"Threads = %d\n",&config->n_threads);
@@ -26,5 +24,4 @@ void update_config(char* path){
     fscanf(file,"LocalDomain = %s\n",config->local_domain);
     fscanf(file,"NamedPipeEstatisticas = %s\n",config->pipe_name);
     fclose(file);
-    sem_post(config_mutex);
 }

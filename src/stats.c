@@ -10,45 +10,45 @@ stats_struct initialize_stats(){
 
 void print_stats(){
     pthread_mutex_lock(&stats_mutex);
-    char * time = NULL;
-    asctime_r(&stats.last_time,time);
     int sum = stats.requests_denied + stats.extern_domains_resolved + stats.local_domains_resolved;
-    printf("Server start time: %sLocal domains resolved: %d\nExtern domains resolved:%d\nRequests refused: %d\nTotal requests received: %d\nLast information received: %s\n",asctime(stats.start_time),stats.local_domains_resolved,stats.extern_domains_resolved,stats.requests_denied,sum,time);
+    printf("Server start time: ");
+    print_time_instant(stats.start_time);
+    printf("\nLocal domains resolved: %d\nExtern domains resolved:%d\nRequests refused: %d\nTotal requests received: %d\nLast information received: ",stats.local_domains_resolved,stats.extern_domains_resolved,stats.requests_denied,sum);
+    print_time_instant(stats.last_time);
+    printf("\n");
     pthread_mutex_unlock(&stats_mutex);
 }
 
 
 void statistics() {
-    pthread_mutex_init(&stats_mutex,NULL);	
-    stats = initialize_stats();
-    char *pipe_name = (char *)malloc(MAX_PIPE_NAME);
-    sem_wait(config_mutex);
-    strcpy(pipe_name,config->pipe_name);
-    sem_post(config_mutex);  
-    int fd = open(pipe_name, O_RDONLY);
-    struct tm start_time;
-    read(fd,&start_time,sizeof(struct tm));
-    stats.start_time = &start_time;
-    stats.last_time = start_time;
-    printf("Server Start time: %s\n",asctime(stats.start_time));
     printf("Started statistics process\n");
+    stats = initialize_stats();
+    int start_time_pipe = open(config->pipe_name, O_RDONLY);
+    if(start_time_pipe<0){
+	perror("Erro");
+    }
+    time_instant start_time;
+    read(start_time_pipe,&start_time,sizeof(time_instant));
+    stats.start_time = start_time;
+    stats.last_time = start_time;
     pthread_create(&reader, NULL,reader_code,NULL);
     while(TRUE){
-	sleep(30);
 	print_stats();
+	sleep(30);
     }
-    close(fd);
+    close(start_time_pipe);
+}
+
+void print_time_instant(time_instant time){
+    printf("%d/%d/%d %d:%d:%d",time.day,time.month,time.year,time.hour,time.minute,time.seconds);
 }
 
 void *reader_code(void* args){
-    char *pipe_name = (char *)malloc(MAX_PIPE_NAME);
-    sem_wait(config_mutex);
-    strcpy(pipe_name,config->pipe_name);
-    sem_post(config_mutex);  
-    int fd = open(pipe_name,O_RDONLY);
     char aux;
+    int read_fd = open(config->pipe_name,O_RDONLY);
     while(1){
-	read(fd,&aux,sizeof(char));
+	read(read_fd,&aux,sizeof(char));
+	printf("OLA\n");
 	pthread_mutex_lock(&stats_mutex);
 	if(aux == 'l'){
 	    stats.local_domains_resolved++;
@@ -59,9 +59,8 @@ void *reader_code(void* args){
 	else if(aux == 'd'){
 	    stats.requests_denied++;
 	}
-	time_t rawtime;
-	time (&rawtime);
-	localtime_r(&rawtime,&stats.last_time);
+	stats.last_time = get_current_time();
+	print_time_instant(stats.last_time);
 	pthread_mutex_unlock(&stats_mutex);
     }
 }
