@@ -1,4 +1,4 @@
-##How to build the project
+## How to build the project
 
 ```
 cd build
