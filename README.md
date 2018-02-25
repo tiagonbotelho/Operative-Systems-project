@@ -1,3 +1,7 @@
+## Overview
+
+Create a simplified DNS server.
+
 ## How to build the project
 
 ```
